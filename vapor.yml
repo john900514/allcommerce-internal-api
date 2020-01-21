@@ -6,7 +6,7 @@ environments:
     memory: 1024
     cli-memory: 512
     database: allcommerce
-    database-user: cnbuser
+    database-user: acuser
     runtime: php-7.4
     build:
       - 'composer install --no-dev'
@@ -18,7 +18,7 @@ environments:
       memory: 1024
       cli-memory: 512
       database: allcommerce
-      database-user: cnbuser
+      database-user: acuser
       runtime: php-7.4
       build:
         - 'composer install'
@@ -29,6 +29,7 @@ environments:
       memory: 1024
       cli-memory: 512
       database: allcommerce
+      database-user: acuser
       runtime: php-7.4
       build:
         - 'composer install'
