@@ -3,15 +3,74 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: php:7.1.29
+image: php:7.4.1-fpm
 
 pipelines:
-  default:
-    - step:
-        caches:
-          - composer
-        script:
-          - apt-get update && apt-get install -y unzip
-          - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-          - composer install
-          - vendor/bin/phpunit
+  branches:
+    master:
+      - step:
+          name: Perform Unit Testing Production
+          script:
+            - apt-get update && apt-get install -y libzip-dev zip
+            - docker-php-ext-install zip
+            - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+            - composer install --no-interaction --prefer-dist  --optimize-autoloader
+            - ln -f -s .env.pipelines .env
+            - vendor/bin/phpunit
+      - step:
+          name: Execute Production Deployment
+          deployment: production
+          trigger: manual
+          script:
+            - apt-get update && apt-get install -y libzip-dev zip
+            - docker-php-ext-install zip
+            - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+            - composer install --no-interaction --prefer-dist  --optimize-autoloader
+            - composer require laravel/vapor-cli
+            - ln -f -s .env.pipelines .env
+            - vendor/bin/vapor deploy production
+    staging:
+      - step:
+          name: Perform Unit Testing Staging
+          script:
+            - apt-get update && apt-get install -y libzip-dev zip
+            - docker-php-ext-install zip
+            - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+            - composer install --no-interaction --prefer-dist  --optimize-autoloader
+            - ln -f -s .env.pipelines .env
+            - vendor/bin/phpunit
+      - step:
+          name : Execute Staging Deployment
+          deployment: staging
+          trigger: manual
+          script:
+            - apt-get update && apt-get install -y libzip-dev zip
+            - docker-php-ext-install zip
+            - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+            - composer install --no-interaction --prefer-dist  --optimize-autoloader
+            - composer require laravel/vapor-cli
+            - ln -f -s .env.pipelines .env
+            - vendor/bin/vapor deploy staging
+    develop:
+      - step:
+          name: Automated Test & Deploy to Develop
+          deployment: test
+          script:
+            - apt-get update && apt-get install -y libzip-dev zip
+            - docker-php-ext-install zip
+            - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+            - composer install --no-interaction --prefer-dist  --optimize-autoloader
+            - ln -f -s .env.pipelines .env
+            - composer require laravel/vapor-cli
+            - vendor/bin/phpunit
+            - vendor/bin/vapor deploy develop
+definitions:
+  services:
+    mysql:
+      image: mysql:5.8
+      environment:
+        MYSQL_DATABASE: 'allcommerce_pipe'
+        MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+        MYSQL_USER: 'homestead'
+        MYSQL_PASSWORD: 'secret'
+
