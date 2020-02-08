@@ -11,6 +11,7 @@ environments:
     build:
       - 'composer install --no-dev'
       - 'php artisan event:cache'
+      - 'npm install && npm run prod && rm -rf node_modules'
     deploy:
       - 'php artisan migrate --force'
   staging:
@@ -23,6 +24,7 @@ environments:
       build:
         - 'composer install'
         - 'php artisan event:cache'
+        - 'npm install && npm run dev && rm -rf node_modules'
       deploy:
         - 'php artisan migrate --force'
   develop:
@@ -34,5 +36,6 @@ environments:
       build:
         - 'composer install'
         - 'php artisan event:cache'
+        - 'npm install && npm run dev && rm -rf node_modules'
       deploy:
         - 'php artisan migrate --force'

@@ -11,6 +11,28 @@
 |
 */
 
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+
 Route::get('/', function () {
     return view('welcome');
+});
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/redirect', function (Request $request) {
+    $request->session()->put('state', $state = Str::random(40));
+    $data = $request->all();
+
+    $query = http_build_query([
+        'client_id' => $data['client_id'],
+        'redirect_uri' => $data['redirect_uri'],
+        'response_type' => 'code',
+        'scope' => '',
+        'state' => $state,
+    ]);
+
+    return redirect(env('APP_URL').'/oauth/authorize?'.$query);
 });

@@ -10,8 +10,11 @@
     "require": {
         "php": "^7.2",
         "fideloper/proxy": "^4.0",
+        "laminas/laminas-diactoros": "^2.2",
         "laravel/framework": "^6.2",
+        "laravel/passport": "^8.3",
         "laravel/tinker": "^2.0",
+        "laravel/ui": "^1.1",
         "laravel/vapor-core": "^2.2",
         "silber/bouncer": "v1.0.0-rc.6",
         "spatie/laravel-activitylog": "^3.9"

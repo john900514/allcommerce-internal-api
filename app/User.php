@@ -2,16 +2,18 @@
 
 namespace App;
 
+use App\Merchants;
 use App\Traits\UuidModel;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
-use Silber\Bouncer\Database\HasRolesAndAbilities;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Silber\Bouncer\Database\HasRolesAndAbilities;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasRolesAndAbilities, LogsActivity, Notifiable, UuidModel;
+    use HasApiTokens, HasRolesAndAbilities, LogsActivity, Notifiable, UuidModel;
 
     /**
      * The attributes that are mass assignable.
@@ -39,4 +41,13 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * @return Merchants|null
+     */
+    public function merchant()
+    {
+        return $this->hasOne('App\MerchantUsers', 'user_uuid', 'uuid')
+            ->first()->merchant()->first();
+    }
 }
