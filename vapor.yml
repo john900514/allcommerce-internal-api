@@ -11,6 +11,8 @@ environments:
     build:
       - 'composer install --no-dev'
       - 'php artisan event:cache'
+      - 'curl -sL https://deb.nodesource.com/setup_10.x | bash -'
+      - 'apt-get install -y nodejs'
       - 'npm install && npm run prod && rm -rf node_modules'
     deploy:
       - 'php artisan migrate --force'
@@ -24,6 +26,8 @@ environments:
       build:
         - 'composer install'
         - 'php artisan event:cache'
+        - 'curl -sL https://deb.nodesource.com/setup_10.x | bash -'
+        - 'apt-get install -y nodejs'
         - 'npm install && npm run dev && rm -rf node_modules'
       deploy:
         - 'php artisan migrate --force'
@@ -36,6 +40,8 @@ environments:
       build:
         - 'composer install'
         - 'php artisan event:cache'
+        - 'curl -sL https://deb.nodesource.com/setup_10.x | bash -'
+        - 'apt-get install -y nodejs'
         - 'npm install && npm run dev && rm -rf node_modules'
       deploy:
         - 'php artisan migrate --force'
