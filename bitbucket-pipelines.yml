@@ -76,7 +76,11 @@ definitions:
   services:
     mysql:
       image: mysql:5.8
-      variables:
-        MYSQL_DATABASE: 'pipelines'
-        MYSQL_ROOT_PASSWORD: 'let_me_in'
+      ports:
+        - 3306:3306
+      environment:
+          MYSQL_DATABASE: gc
+          MYSQL_ROOT_PASSWORD: root_user_password
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_user_password
 
