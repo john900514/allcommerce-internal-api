@@ -78,7 +78,5 @@ definitions:
       image: mysql:5.8
       variables:
         MYSQL_DATABASE: 'pipelines'
-        MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
-        MYSQL_USER: 'homestead'
-        MYSQL_PASSWORD: 'secret'
+        MYSQL_ROOT_PASSWORD: 'let_me_in'
 
