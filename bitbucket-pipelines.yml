@@ -56,14 +56,22 @@ pipelines:
           name: Automated Test & Deploy to Develop
           deployment: test
           script:
-            - apt-get update && apt-get install -y libzip-dev zip
+            - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
+            - docker-php-ext-install pdo_mysql
             - docker-php-ext-install zip
+            - docker-php-ext-install gd
             - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
             - composer install --no-interaction --prefer-dist  --optimize-autoloader
             - ln -f -s .env.pipelines .env
+            - npm install && npm run dev
+            - php artisan serve &
+            - sleep 5
+            - php artisan migrate
+            - php artisan config:clear && vendor/bin/phpunit
             - composer require laravel/vapor-cli
-            - vendor/bin/phpunit
             - vendor/bin/vapor deploy develop
+        services:
+          - mysql
 definitions:
   services:
     mysql:

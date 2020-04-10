@@ -38,10 +38,9 @@ environments:
       database-user: acuser
       runtime: php-7.4
       build:
-        - 'composer install'
+        - 'apt-get update && apt-get install -y npm'
+        - 'composer install --classmap-authoritative'
         - 'php artisan event:cache'
-        - 'curl -sL https://deb.nodesource.com/setup_10.x | bash -'
-        - 'apt-get install -y nodejs'
         - 'npm install && npm run dev && rm -rf node_modules'
       deploy:
         - 'php artisan migrate --force'

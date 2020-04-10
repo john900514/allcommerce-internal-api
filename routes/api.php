@@ -14,7 +14,11 @@ use Illuminate\Http\Request;
 */
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+    $merchant = $user->merchant();
+    $m = ['merchant' => $merchant->name];
+    $payload = array_merge($user->toArray(), $m);
+    return $payload;
 });
 
 Route::group(['middleware'=> ['auth:api', 'scopes']], function() {
