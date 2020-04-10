@@ -24,11 +24,18 @@ class UserActionToActivityLog
             $ip = $request->ip();
 
             $payload = [
+                'app' => 'oauth api',
+                'app_url' => env('APP_URL'),
                 'route' => $route,
                 'ip' => $ip,
                 'data' => $request->all(),
                 'headers' => $request->headers->all()
             ];
+
+            if(array_key_exists('password', $payload['data']))
+            {
+                unset($payload['data']['password']);
+            }
             // If user is a guest, log guest activity
             if (auth()->guest()) {
                 activity('guest-activity')
