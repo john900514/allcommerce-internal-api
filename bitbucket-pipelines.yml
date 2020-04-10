@@ -3,7 +3,8 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: php:7.4.1-fpm
+image: lorisleiva/laravel-docker:latest
+
 
 pipelines:
   branches:
@@ -55,12 +56,9 @@ pipelines:
       - step:
           name: Automated Test & Deploy to Develop
           deployment: test
+          caches:
+            - composer
           script:
-            - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
-            - docker-php-ext-install pdo_mysql
-            - docker-php-ext-install zip
-            - docker-php-ext-install gd
-            - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
             - composer install --no-interaction --prefer-dist  --optimize-autoloader
             - ln -f -s .env.pipelines .env
             - npm install && npm run dev
@@ -70,17 +68,15 @@ pipelines:
             - php artisan config:clear && vendor/bin/phpunit
             - composer require laravel/vapor-cli
             - vendor/bin/vapor deploy develop
-        services:
-          - mysql
+          services:
+            - mysql
 definitions:
   services:
     mysql:
       image: mysql:5.8
-      ports:
-        - 3306:3306
-      environment:
-          MYSQL_DATABASE: gc
-          MYSQL_ROOT_PASSWORD: root_user_password
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_user_password
+      variables:
+        MYSQL_DATABASE: 'allcommerce_pipe'
+        MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+        MYSQL_USER: 'homestead'
+        MYSQL_PASSWORD: 'secret'
 
