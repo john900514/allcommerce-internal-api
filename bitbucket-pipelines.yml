@@ -76,8 +76,8 @@ definitions:
   services:
     mysql:
       image: mysql:5.8
-      environment:
-        MYSQL_DATABASE: 'allcommerce_pipe'
+      variables:
+        MYSQL_DATABASE: 'pipelines'
         MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
         MYSQL_USER: 'homestead'
         MYSQL_PASSWORD: 'secret'
