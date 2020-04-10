@@ -55,6 +55,8 @@ pipelines:
       - step:
           name: Automated Test & Deploy to Develop
           deployment: test
+          caches:
+            - composer
           script:
             - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
             - docker-php-ext-install pdo_mysql
@@ -65,6 +67,7 @@ pipelines:
             - ln -f -s .env.pipelines .env
             - npm install && npm run dev
             - php artisan migrate
+            - php artisan passport:install
             - php artisan serve &
             - sleep 5
             - php artisan config:clear && vendor/bin/phpunit
