@@ -27,6 +27,8 @@ pipelines:
               - php artisan serve &
               - sleep 5
               - php artisan config:clear && vendor/bin/phpunit
+            services:
+              - mysql
       - step:
           name: Execute Production Deployment
           deployment: production
@@ -61,6 +63,8 @@ pipelines:
             - php artisan serve &
             - sleep 5
             - php artisan config:clear && vendor/bin/phpunit
+          services:
+             - mysql
       - step:
           name : Execute Staging Deployment
           deployment: staging
