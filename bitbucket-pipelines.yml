@@ -10,6 +10,9 @@ pipelines:
     master:
       - step:
           name: Perform Unit Testing Production
+          caches:
+            - composer
+            - node
           script:
             - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
               - docker-php-ext-install pdo_mysql
@@ -27,6 +30,8 @@ pipelines:
       - step:
           name: Execute Production Deployment
           deployment: production
+          caches:
+            - composer
           trigger: manual
           script:
             - apt-get update && apt-get install -y libzip-dev zip
@@ -39,6 +44,9 @@ pipelines:
     staging:
       - step:
           name: Perform Unit Testing Staging
+          caches:
+            - composer
+            - node
           script:
             - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
             - docker-php-ext-install pdo_mysql
@@ -56,6 +64,8 @@ pipelines:
       - step:
           name : Execute Staging Deployment
           deployment: staging
+          caches:
+            - composer
           trigger: manual
           script:
             - apt-get update && apt-get install -y libzip-dev zip
@@ -71,6 +81,7 @@ pipelines:
           deployment: test
           caches:
             - composer
+            - node
           script:
             - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
             - docker-php-ext-install pdo_mysql
