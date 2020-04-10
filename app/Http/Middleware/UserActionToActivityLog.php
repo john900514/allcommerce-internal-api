@@ -30,7 +30,7 @@ class UserActionToActivityLog
                 'headers' => $request->headers->all()
             ];
             // If user is a guest, log guest activity
-            if (backpack_auth()->guest()) {
+            if (auth()->guest()) {
                 activity('guest-activity')
                     ->withProperties($payload)
                     ->log('Guest Visiting - '.$route);
@@ -38,7 +38,7 @@ class UserActionToActivityLog
             else
             {
                 //If user is a user, log user activity
-                $user = backpack_user();
+                $user = auth()->user();
 
                 $payload['user'] = $user->name;
 
@@ -53,6 +53,10 @@ class UserActionToActivityLog
             if(env('APP_ENV') != 'local')
             {
                 Sentry\captureException($e);
+            }
+            else
+            {
+                Log::info($e->getMessage());
             }
         }
 
