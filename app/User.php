@@ -47,7 +47,14 @@ class User extends Authenticatable
      */
     public function merchant()
     {
-        return $this->hasOne('App\MerchantUsers', 'user_uuid', 'uuid')
-            ->first()->merchant()->first();
+        $through_model = $this->hasOne('App\MerchantUsers', 'user_uuid', 'uuid')->first();
+
+        if(!is_null($through_model))
+        {
+            return $through_model->merchant()->first();
+        }
+
+        return null;
+
     }
 }

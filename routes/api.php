@@ -16,7 +16,15 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     $user = $request->user();
     $merchant = $user->merchant();
-    $m = ['merchant' => $merchant->name];
+    if(!is_null($merchant))
+    {
+        $m = ['merchant' => $merchant->name];
+    }
+    else
+    {
+        $m = ['merchant' => 'Cape & Bay User'];
+    }
+
     $payload = array_merge($user->toArray(), $m);
     return $payload;
 });

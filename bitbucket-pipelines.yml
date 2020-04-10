@@ -11,12 +11,19 @@ pipelines:
       - step:
           name: Perform Unit Testing Production
           script:
-            - apt-get update && apt-get install -y libzip-dev zip
-            - docker-php-ext-install zip
-            - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-            - composer install --no-interaction --prefer-dist  --optimize-autoloader
-            - ln -f -s .env.pipelines .env
-            - vendor/bin/phpunit
+            - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
+              - docker-php-ext-install pdo_mysql
+              - docker-php-ext-install zip
+              - docker-php-ext-install gd
+              - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+              - composer install --no-interaction --prefer-dist  --optimize-autoloader
+              - ln -f -s .env.pipelines .env
+              - npm install && npm run dev
+              - php artisan migrate
+              - php artisan passport:install
+              - php artisan serve &
+              - sleep 5
+              - php artisan config:clear && vendor/bin/phpunit
       - step:
           name: Execute Production Deployment
           deployment: production
@@ -33,12 +40,19 @@ pipelines:
       - step:
           name: Perform Unit Testing Staging
           script:
-            - apt-get update && apt-get install -y libzip-dev zip
+            - apt-get update && apt-get install -qy libzip-dev zip libpng-dev git npm curl libmcrypt-dev default-mysql-client
+            - docker-php-ext-install pdo_mysql
             - docker-php-ext-install zip
+            - docker-php-ext-install gd
             - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
             - composer install --no-interaction --prefer-dist  --optimize-autoloader
             - ln -f -s .env.pipelines .env
-            - vendor/bin/phpunit
+            - npm install && npm run dev
+            - php artisan migrate
+            - php artisan passport:install
+            - php artisan serve &
+            - sleep 5
+            - php artisan config:clear && vendor/bin/phpunit
       - step:
           name : Execute Staging Deployment
           deployment: staging
