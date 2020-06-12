@@ -39,5 +39,20 @@ Route::group(['middleware'=> ['auth:api', 'scopes']], function() {
         Route::get('/', 'MerchantInventoryController@index');
         Route::post('/adhoc-inventory-import', 'MerchantInventoryController@rogue_import_biatch');
     });
+});
+
+Route::group(['middleware' => ['shopify.hmac']], function () {
+    Route::group(['prefix'=> 'shopify'], function() {
+        Route::group(['prefix'=> 'installer'], function() {
+            Route::post('/nonce', 'ShopifySalesChannel\ShopifySalesChannelInstallerController@nonce');
+            Route::post('/confirm-request', 'ShopifySalesChannel\ShopifySalesChannelInstallerController@confirm');
+        });
+
+        Route::group(['prefix'=> 'shop'], function() {
+            Route::post('/', 'ShopifySalesChannel\ShopifyShopAccessController@get_basic_store_info');
+
+        });
+    });
+
 
 });
