@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ShopifySalesChannel;
 
+use App\Merchants;
 use App\ShopifyInstalls;
 use Illuminate\Http\Request;
 use Ixudra\Curl\Facades\Curl;
@@ -72,6 +73,50 @@ class ShopifyShopAccessController extends Controller
 
                 $results = ['success' => true, 'shop' => $response];
 
+            }
+        }
+
+        return response()->json($results);
+    }
+
+    public function get_assigned_merchant_info(Merchants $merchants)
+    {
+        $results = ['success' => false, 'reason' => 'No Merchant Assigned!'];
+
+        $data = $this->request->all();
+
+        $validated = Validator::make($data, [
+            'hmac' => 'bail|required',
+            'shop' => 'bail|required',
+            'timestamp' => 'bail|required',
+            'session' => 'bail|required',
+            'locale' => 'bail|required',
+        ]);
+
+        if ($validated->fails())
+        {
+            foreach($validated->errors()->toArray() as $col => $msg)
+            {
+                $results['reason'] = $msg[0];
+                break;
+            }
+        }
+        else
+        {
+            $install = $this->install_status->whereShopifyStoreUrl($data['shop'])
+                ->with('allcommerce_merchant')
+                ->first();
+
+            if(!is_null($install))
+            {
+                if(!is_null($install->allcommerce_merchant))
+                {
+                    $results = ['success' => true, 'merchant' => $install->allcommerce_merchant->toArray()];
+                }
+            }
+            else
+            {
+                $results['reason'] = 'Invalid Shop!';
             }
         }
 
