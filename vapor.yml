@@ -5,9 +5,14 @@ environments:
     domain: ac-merchants.capeandbay.com
     memory: 1024
     cli-memory: 512
+    cli-timeout: 600
+    timeout: 60
+    gateway-version: 2
     database: allcommerce
     database-user: acuser
     runtime: php-7.4
+    queues:
+      - aco-production-shopify
     build:
       - 'composer install --no-dev'
       - 'php artisan event:cache'
@@ -20,9 +25,14 @@ environments:
       domain: ac-merchants-dev.capeandbay.com
       memory: 1024
       cli-memory: 512
+      cli-timeout: 600
+      timeout: 60
+      gateway-version: 2
       database: allcommerce
       database-user: acuser
       runtime: php-7.4
+      queues:
+        - aco-staging-shopify
       build:
         - 'composer install'
         - 'php artisan event:cache'
@@ -34,9 +44,14 @@ environments:
   develop:
       memory: 1024
       cli-memory: 512
+      cli-timeout: 600
+      timeout: 60
+      gateway-version: 2
       database: allcommerce
       database-user: acuser
       runtime: php-7.4
+      queues:
+        - aco-develop-shopify
       build:
         - 'apt-get update && apt-get install -y npm'
         - 'composer install --classmap-authoritative'
