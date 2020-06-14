@@ -1,5 +1,6 @@
 id: 6274
 name: allcommerce-merchants
+separate-vendor: true
 environments:
   production:
     domain: ac-merchants.capeandbay.com
