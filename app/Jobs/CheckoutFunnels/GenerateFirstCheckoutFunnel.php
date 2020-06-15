@@ -46,6 +46,7 @@ class GenerateFirstCheckoutFunnel implements ShouldQueue
             'shop_install_id' => $this->active_install->uuid,
             'funnel_name'     => 'Baby\'s 1st Checkout Funnel',
             'shop_platform'   => 'shopify',
+            'default'         => 1,
             'active'          => 1
         ];
 
