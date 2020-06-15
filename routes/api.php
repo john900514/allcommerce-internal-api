@@ -56,6 +56,4 @@ Route::group(['middleware' => ['shopify.hmac']], function () {
             });
         });
     });
-
-
 });

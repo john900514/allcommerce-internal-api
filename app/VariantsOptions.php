@@ -12,6 +12,10 @@ class VariantsOptions extends Model
 
     protected $hidden = ['id', 'deleted_at'];
 
+    protected $casts = [
+        'values' => 'array'
+    ];
+
     public function alpha_insertShopifyOption(Merchants $merchant, MerchantInventory $item, array $data)
     {
         $results = false;
@@ -30,6 +34,24 @@ class VariantsOptions extends Model
         if($option->save())
         {
             $results = $option;
+        }
+
+        return $results;
+    }
+
+    public function insert(array $schema)
+    {
+        $results = false;
+
+        $model = new $this();
+        foreach($schema as $col => $val)
+        {
+            $model->$col = $val;
+        }
+
+        if($model->save())
+        {
+            $results = $model;
         }
 
         return $results;

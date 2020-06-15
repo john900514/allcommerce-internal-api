@@ -13,6 +13,10 @@ class InventoryVariants extends Model
 
     protected $hidden = ['id', 'deleted_at'];
 
+    protected $casts = [
+        'options' => 'array'
+    ];
+
     public function alpha_insertShopifyVariant(Merchants $merchant,
                                                MerchantInventory $item,
                                                array $data)
@@ -58,6 +62,24 @@ class InventoryVariants extends Model
         if($variant->save())
         {
             $results = $variant;
+        }
+
+        return $results;
+    }
+
+    public function insert(array $schema)
+    {
+        $results = false;
+
+        $model = new $this();
+        foreach($schema as $col => $val)
+        {
+            $model->$col = $val;
+        }
+
+        if($model->save())
+        {
+            $results = $model;
         }
 
         return $results;

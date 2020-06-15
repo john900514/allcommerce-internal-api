@@ -14,6 +14,7 @@ environments:
     runtime: php-7.4
     queues:
       - aco-production-shopify
+      - aco-production-funnels
     build:
       - 'composer install --no-dev'
       - 'php artisan event:cache'
@@ -34,6 +35,7 @@ environments:
       runtime: php-7.4
       queues:
         - aco-staging-shopify
+        - aco-staging-funnels
       build:
         - 'composer install'
         - 'php artisan event:cache'
@@ -53,6 +55,7 @@ environments:
       runtime: php-7.4
       queues:
         - aco-develop-shopify
+        - aco-develop-funnels
       build:
         - 'apt-get update && apt-get install -y npm'
         - 'composer install --classmap-authoritative'

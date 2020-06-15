@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\InventoryImages;
 use App\InventoryVariants;
 use App\MerchantInventory;
+use App\ShopifyInstalls;
 use App\VariantsOptions;
 use Illuminate\Http\Request;
 
@@ -84,6 +85,4 @@ class MerchantInventoryController extends Controller
 
         return response()->json($results);
     }
-
-
 }

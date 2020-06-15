@@ -12,6 +12,10 @@ class InventoryImages extends Model
 
     protected $hidden = ['id', 'deleted_at'];
 
+    protected $casts = [
+        'variant_ids' => 'array'
+    ];
+
     public function alpha_insertShopifyImage(Merchants $merchant, MerchantInventory $item, array $data)
     {
         $results = false;
@@ -33,6 +37,24 @@ class InventoryImages extends Model
         if($img->save())
         {
             $results = $img;
+        }
+
+        return $results;
+    }
+
+    public function insert(array $schema)
+    {
+        $results = false;
+
+        $model = new $this();
+        foreach($schema as $col => $val)
+        {
+            $model->$col = $val;
+        }
+
+        if($model->save())
+        {
+            $results = $model;
         }
 
         return $results;

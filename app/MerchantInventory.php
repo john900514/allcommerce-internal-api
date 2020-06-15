@@ -41,8 +41,81 @@ class MerchantInventory extends Model
         return $this->hasMany('App\InventoryVariants', 'inventory_uuid', 'uuid');
     }
 
+    public function variant_options()
+    {
+        return $this->hasMany('App\VariantsOptions', 'inventory_uuid', 'uuid');
+    }
+
     public function images()
     {
         return $this->hasMany('App\InventoryImages', 'inventory_uuid', 'uuid');
+    }
+
+    public function getShopDefaultItem($shop_install_id)
+    {
+        $results = false;
+
+        $record = $this->whereShopInstallId($shop_install_id)
+                        ->whereDefaultItem(1)
+                        ->whereActive(1)
+                        ->first();
+
+        if(!is_null($record))
+        {
+            $results = $record;
+        }
+
+        return $results;
+    }
+
+    public function getAllItemsByShopId($shop_install_id, $platform = 'allcommerce')
+    {
+        $results = false;
+
+        $records = $this->whereShopInstallId($shop_install_id)
+            ->wherePlatform($platform)
+            ->get();
+
+        if($records)
+        {
+            $results = $records;
+        }
+
+        return $results;
+    }
+
+    public function getItemByPlatformId($platform_id, $shop_install_id, $platform = 'allcommerce')
+    {
+        $results = false;
+
+        $record = $this->whereShopInstallId($shop_install_id)
+            ->wherePlatformId($platform_id)
+            ->wherePlatform($platform)
+            ->first();
+
+        if(!is_null($record))
+        {
+            $results = $record;
+        }
+
+        return $results;
+    }
+
+    public function insert(array $schema)
+    {
+        $results = false;
+
+        $model = new $this();
+        foreach($schema as $col => $val)
+        {
+            $model->$col = $val;
+        }
+
+        if($model->save())
+        {
+            $results = $model;
+        }
+
+        return $results;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ShopifySalesChannel;
 
+use App\Jobs\Shopify\Inventory\ImportProductListings;
 use Ramsey\Uuid\Uuid;
 use App\ShopifyInstalls;
 use Illuminate\Http\Request;
@@ -116,6 +117,10 @@ class ShopifySalesChannelInstallerController extends Controller
                 $stats = $install_model->toArray();
                 unset($stats['id']);
                 unset($stats['deleted_at']);
+
+                // queue the inventory import job
+                ImportProductListings::dispatch($install_model)->onQueue('aco-'.env('APP_ENV').'-shopify');
+
                 $results = ['success' => true, 'stats' => $stats];
             }
             else

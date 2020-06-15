@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ShopifySalesChannel;
 
+use App\CheckoutFunnels;
 use App\Merchants;
 use App\ShopifyInstalls;
 use Illuminate\Http\Request;
@@ -11,10 +12,11 @@ use Illuminate\Support\Facades\Validator;
 
 class ShopifyShopAccessController extends Controller
 {
-    protected $install_status, $request;
+    protected $install_status, $request, $funnels;
 
-    public function __construct(Request $request, ShopifyInstalls $installs)
+    public function __construct(Request $request, ShopifyInstalls $installs, CheckoutFunnels $funnels)
     {
+        $this->funnels = $funnels;
         $this->request = $request;
         $this->install_status = $installs;
     }
@@ -69,7 +71,18 @@ class ShopifyShopAccessController extends Controller
                     $response['allcommerce_merchant'] = $merchant->toArray();
                 }
 
+                if($funnel = $this->funnels->getDefaultFunnelByShop('shopify', $install_info['uuid']))
+                {
+                    $fun = [
+                        'name' => $funnel->funnel_name,
+                        'url' => 'https://'.$data['shop'].'/a/sales/secure/checkout/'.$funnel->uuid
+                    ];
+
+                    $response['funnel'] = $fun;
+                }
+
                 // @todo - ping Shopify for even more datas.
+
 
                 $results = ['success' => true, 'shop' => $response];
 
