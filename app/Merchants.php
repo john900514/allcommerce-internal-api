@@ -2,20 +2,29 @@
 
 namespace App;
 
-use Bouncer;
-use App\User;
-use App\Traits\UuidModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
+use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
 
 class Merchants extends Model
 {
-    use HasRolesAndAbilities, LogsActivity, Notifiable, SoftDeletes, UuidModel;
+    use HasRolesAndAbilities, LogsActivity, Notifiable, SoftDeletes, Uuid;
 
     protected $hidden = ['id', 'deleted_at'];
+
+    protected $casts = [
+        'id' => 'uuid',
+        'client_id' => 'uuid'
+    ];
+
+    public static function clientMerchants($client_id)
+    {
+        return self::whereClientId($client_id)->get();
+    }
 
     public function permissions(User $user)
     {
@@ -48,6 +57,16 @@ class Merchants extends Model
         }
 
         return $results;
+    }
+
+    public function shops()
+    {
+        return $this->hasMany('App\Shops', 'merchant_id', 'id');
+    }
+
+    public function client()
+    {
+        return $this->belongsTo('App\Clients', 'client_id', 'id');
     }
 
     public function inventory()

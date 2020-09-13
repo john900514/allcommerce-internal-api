@@ -2,18 +2,42 @@
 
 namespace App;
 
-use App\Traits\UuidModel;
+use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class VariantsOptions extends Model
 {
-    use SoftDeletes, UuidModel;
+    use SoftDeletes, Uuid;
 
-    protected $hidden = ['id', 'deleted_at'];
+    protected $hidden = ['deleted_at'];
+
+    /**
+     * The "type" of the auto-incrementing ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = [];
 
     protected $casts = [
-        'values' => 'array'
+        'values' => 'array',
+        'id' => 'uuid',
+        'shop_id' => 'uuid',
+        'inventory_id' => 'uuid',
     ];
 
     public function alpha_insertShopifyOption(Merchants $merchant, MerchantInventory $item, array $data)
@@ -22,7 +46,7 @@ class VariantsOptions extends Model
 
         $option = new $this();
         $option->merchant_uuid = $merchant->uuid;
-        $option->inventory_uuid = $item->uuid;
+        $option->inventory_id = $item->uuid;
         $option->platform_id = $data['id'];
         $option->platform = 'shopify';
         $option->inventory_platform_id = $data['product_id'];

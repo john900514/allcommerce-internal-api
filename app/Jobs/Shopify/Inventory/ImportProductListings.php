@@ -42,26 +42,27 @@ class ImportProductListings implements ShouldQueue
                            InventoryImages $images,
                            VariantsOptions $options)
     {
-        $local_items = $inventory->getAllItemsByShopId($this->active_install->uuid, 'shopify');
+        $local_items = $inventory->getAllItemsByShopId($this->active_install->id, 'shopify');
 
         $headers = [
             'X-Shopify-Access-Token: '.$this->active_install->access_token
         ];
 
         // Call out to shopify for product listing or fail
-        $response  = Curl::to('https://'.$this->active_install->shopify_store_url.'/admin/api/2020-04/product_listings.json')
+        //$response  = Curl::to('https://'.$this->active_install->shopify_store_url.'/admin/api/2020-07/product_listings.json')
+        $response  = Curl::to('https://'.$this->active_install->shopify_store_url.'/admin/api/2020-07/products.json')
             ->withHeaders($headers)
             ->asJson(true)
             ->get();
 
-        if(is_array($response) && array_key_exists('product_listings', $response))
+        if(is_array($response) && array_key_exists('products', $response))
         {
-            if(count($response['product_listings']) > 0)
+            if(count($response['products']) > 0)
             {
                 // if items, for each listing
-                foreach($response['product_listings'] as $idx => $listing)
+                foreach($response['products'] as $idx => $listing)
                 {
-                    if(!$local_listing = $local_items->where('platform_id', '=', $listing['product_id'])->first())
+                    if(is_null($local_listing = $local_items->where('platform_id', '=', $listing['id'])->first()))
                     {
                         // store it
                         $local_listing = $this->createNewListing($listing, $local_items, $idx, $inventory);
@@ -69,7 +70,7 @@ class ImportProductListings implements ShouldQueue
                     else
                     {
                         // update the product's data
-                        $local_listing = $this->updateListing($listing, $local_listing);
+                        $local_listing = $this->updateListing($listing, $local_listing, $idx);
                     }
 
                     if($local_listing)
@@ -118,11 +119,12 @@ class ImportProductListings implements ShouldQueue
         }
     }
 
-    private function updateListing($listing, MerchantInventory $local_listing)
+    private function updateListing($listing, MerchantInventory $local_listing, $idx)
     {
         $args = [
-            'shop_install_id' => $this->active_install->uuid,
-            'platform_id' => $listing['product_id'],
+            'shop_id' => $this->active_install->shop_uuid,
+            'shop_install_id' => $this->active_install->id,
+            'platform_id' => $listing['id'],
             'platform' => 'shopify',
             'title' => $listing['title'],
             'body_html' => $listing['body_html'],
@@ -146,8 +148,9 @@ class ImportProductListings implements ShouldQueue
     private function createNewListing($listing, $local_items, $idx, MerchantInventory $inventory)
     {
         $args = [
-            'shop_install_id' => $this->active_install->uuid,
-            'platform_id' => $listing['product_id'],
+            'shop_id' => $this->active_install->shop_uuid,
+            'shop_install_id' => $this->active_install->id,
+            'platform_id' => $listing['id'],
             'platform' => 'shopify',
             'title' => $listing['title'],
             'body_html' => $listing['body_html'],
@@ -161,7 +164,7 @@ class ImportProductListings implements ShouldQueue
         if(count($local_items) == 0)
         {
             $args['active'] = ($idx == 0) ? 1 : 0;
-            $args['default_item']= ($idx == 0) ? 1 : 0;
+            $args['default_item'] = ($idx == 0) ? 1 : 0;
         }
 
         return $inventory->insert($args);
@@ -171,12 +174,19 @@ class ImportProductListings implements ShouldQueue
     {
         foreach($variants as $v => $variant)
         {
-            $local_variant = $inv_variants->whereInventoryItemId($variant['id'])
-                ->whereInventoryUuid($local_listing->uuid)
+            $local_variant = $inv_variants->whereInventoryItemId($variant['product_id'])
+                ->whereInventoryId($local_listing->id)
                 ->first();
 
+            $option = [
+                'option1' => $variant['option1'],
+                'option2' => $variant['option2'],
+                'option3' => $variant['option3'],
+            ];
+
             $args = [
-                'inventory_uuid' => $local_listing->uuid,
+                'shop_id' => $this->active_install->shop_uuid,
+                'inventory_id' => $variant['product_id'],
                 'inventory_item_id' => $variant['id'],
                 'title' => $variant['title'],
                 'price' => $variant['price'],
@@ -195,7 +205,7 @@ class ImportProductListings implements ShouldQueue
                 'inventory_quantity' => $variant['inventory_quantity'],
                 'requires_shipping' => $variant['requires_shipping'],
                 'old_inventory_quantity' => 0,
-                'options' => $variant['option_values'],
+                'options' => $option,
             ];
 
             // check for the record in the db
@@ -220,7 +230,8 @@ class ImportProductListings implements ShouldQueue
         foreach($images as $i => $image)
         {
             $args = [
-                'inventory_uuid' => $local_listing->uuid,
+                'shop_id' => $this->active_install->shop_uuid,
+                'inventory_uuid' => $local_listing->id,
                 'platform_id' => $local_listing->platform_id,
                 'inventory_platform_id' => $image['id'],
                 'position' => $image['position'],
@@ -230,7 +241,7 @@ class ImportProductListings implements ShouldQueue
                 'variant_ids' => $image['variant_ids'],
             ];
 
-            $local_image = $inv_images->whereInventoryUuid($local_listing->uuid)
+            $local_image = $inv_images->whereInventoryUuid($local_listing->id)
                 ->whereInventoryPlatformId($image['id'])
                 ->first();
 
@@ -255,7 +266,8 @@ class ImportProductListings implements ShouldQueue
         foreach($options as $o => $option)
         {
             $args = [
-                'inventory_uuid' => $local_listing->uuid,
+                'shop_id' => $local_listing->shop_id,
+                'inventory_id' => $local_listing->id,
                 'platform_id' => $local_listing->platform_id,
                 'inventory_platform_id' => $option['id'],
                 'name' => $option['name'],
@@ -263,7 +275,7 @@ class ImportProductListings implements ShouldQueue
                 'values' => $option['values'],
             ];
 
-            $local_option = $inv_options->whereInventoryUuid($local_listing->uuid)
+            $local_option = $inv_options->whereInventoryId($local_listing->uuid)
                 ->whereInventoryPlatformId($option['id'])
                 ->first();
 

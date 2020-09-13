@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\ShopifySalesChannel;
 
 use App\Jobs\Shopify\Inventory\ImportProductListings;
+use App\Shops;
+use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Uuid;
 use App\ShopifyInstalls;
 use Illuminate\Http\Request;
@@ -19,7 +21,7 @@ class ShopifySalesChannelInstallerController extends Controller
         $this->request = $request;
     }
 
-    public function nonce(ShopifyInstalls $installs)
+    public function nonce(ShopifyInstalls $installs, Shops $shops)
     {
         $results = ['success' => false, 'reason' => 'Missing Shop.'];
 
@@ -94,6 +96,8 @@ class ShopifySalesChannelInstallerController extends Controller
             $install_model = $installs->whereNonce($data['state'])
                 ->first();
 
+            $install_model->addOwnership();
+
             $install_model->auth_code = $data['code'];
 
             $payload = [
@@ -107,7 +111,9 @@ class ShopifySalesChannelInstallerController extends Controller
                 ->asJson(true)
                 ->post();
 
-            if(array_key_exists('access_token', $response))
+            Log::info("Response from {$data['shop']} - ", [$response]);
+
+            if((!is_null($response)) && array_key_exists('access_token', $response))
             {
                 $install_model->access_token = $response['access_token'];
                 $install_model->scopes = $response['scope'];
@@ -132,4 +138,5 @@ class ShopifySalesChannelInstallerController extends Controller
 
         return response($results);
     }
+
 }

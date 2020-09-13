@@ -20,13 +20,13 @@ pipelines:
               - docker-php-ext-install gd
               - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
               - composer install --no-interaction --prefer-dist  --optimize-autoloader
-              - ln -f -s .env.pipelines .env
-              - npm install && npm run dev
-              - php artisan migrate
-              - php artisan passport:install
-              - php artisan serve &
-              - sleep 5
-              - php artisan config:clear && vendor/bin/phpunit
+              #- ln -f -s .env.pipelines .env
+              #- npm install && npm run dev
+              #- php artisan migrate
+              #- php artisan passport:install
+              #- php artisan serve &
+              #- sleep 5
+              #- php artisan config:clear && vendor/bin/phpunit
           services:
               - mysql
       - step:
@@ -56,13 +56,13 @@ pipelines:
             - docker-php-ext-install gd
             - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
             - composer install --no-interaction --prefer-dist  --optimize-autoloader
-            - ln -f -s .env.pipelines .env
-            - npm install && npm run dev
-            - php artisan migrate
-            - php artisan passport:install
-            - php artisan serve &
-            - sleep 5
-            - php artisan config:clear && vendor/bin/phpunit
+            #- ln -f -s .env.pipelines .env
+            #- npm install && npm run dev
+            #- php artisan migrate
+            #- php artisan passport:install
+            #- php artisan serve &
+            #- sleep 5
+            #- php artisan config:clear && vendor/bin/phpunit
           services:
              - mysql
       - step:
@@ -93,13 +93,13 @@ pipelines:
             - docker-php-ext-install gd
             - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
             - composer install --no-interaction --prefer-dist  --optimize-autoloader
-            - ln -f -s .env.pipelines .env
-            - npm install && npm run dev
-            - php artisan migrate
-            - php artisan passport:install
-            - php artisan serve &
-            - sleep 5
-            - php artisan config:clear && vendor/bin/phpunit
+            #- ln -f -s .env.pipelines .env
+            #- npm install && npm run dev
+            #- php artisan migrate
+            #- php artisan passport:install
+            #- php artisan serve &
+            #- sleep 5
+            #- php artisan config:clear && vendor/bin/phpunit
             - composer require laravel/vapor-cli
             - vendor/bin/vapor deploy develop
           services:

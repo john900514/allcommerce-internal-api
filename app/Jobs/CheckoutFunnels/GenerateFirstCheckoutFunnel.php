@@ -11,6 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Log;
 
 class GenerateFirstCheckoutFunnel implements ShouldQueue
 {
@@ -32,7 +33,7 @@ class GenerateFirstCheckoutFunnel implements ShouldQueue
                            CheckoutFunnelAttributes $attributes)
     {
         // Use the ShopifyInstallId to locate the shop's default item
-        $default_item = $inventory->getShopDefaultItem($this->active_install->uuid);
+        $default_item = $inventory->getShopDefaultItem($this->active_install->id);
         $variant = $default_item->variants()->first();
         $options = $default_item->variant_options()->get();
         $option_ids = [];
@@ -43,7 +44,8 @@ class GenerateFirstCheckoutFunnel implements ShouldQueue
 
         // Use the data to generate the Checkout Funnel Record
         $funnel_payload = [
-            'shop_install_id' => $this->active_install->uuid,
+            'shop_id' => $this->active_install->shop_uuid,
+            'shop_install_id' => $this->active_install->id,
             'funnel_name'     => 'Baby\'s 1st Checkout Funnel',
             'shop_platform'   => 'shopify',
             'default'         => 1,
@@ -52,15 +54,16 @@ class GenerateFirstCheckoutFunnel implements ShouldQueue
 
         $funnel = $funnels->insert($funnel_payload);
 
+        Log::info($funnel->toArray());
         // Use the data to generate the checkout funnel attribute records
         $attr_payload = [
             [
-                'funnel_uuid' => $funnel->uuid,
+                'funnel_uuid' => $funnel->id,
                 'funnel_attribute' => 'item-1',
-                'funnel_value' => $default_item->uuid,
+                'funnel_value' => $default_item->id,
                 'funnel_misc_json' => [
                     'qty' => 1,
-                    'variant' => $variant->uuid,
+                    'variant' => $variant->id,
                     'options'  => $option_ids
                 ],
                 'active' => 1

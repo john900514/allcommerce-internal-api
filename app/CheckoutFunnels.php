@@ -2,13 +2,42 @@
 
 namespace App;
 
-use App\Traits\UuidModel;
+use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CheckoutFunnels extends Model
 {
-    use SoftDeletes, UuidModel;
+    use SoftDeletes, Uuid;
+
+    protected $primaryKey  = 'id';
+
+    /**
+     * The "type" of the auto-incrementing ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = [];
+
+    protected $casts = [
+        'id' => 'uuid',
+        'shop_id' => 'uuid',
+        'shop_install_id' => 'uuid',
+    ];
 
     public function getAllActiveFunnels($platform, $shop_uuid)
     {

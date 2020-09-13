@@ -4,17 +4,21 @@ namespace App;
 
 use App\MerchantInventory;
 use App\Traits\UuidModel;
+use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryVariants extends Model
 {
-    use SoftDeletes, UuidModel;
+    use SoftDeletes, Uuid;
 
-    protected $hidden = ['id', 'deleted_at'];
+    protected $hidden = ['deleted_at'];
 
     protected $casts = [
-        'options' => 'array'
+        'options' => 'array',
+        'id' => 'uuid',
+        'shop_id' => 'uuid',
+        'inventory_uuid' => 'uuid',
     ];
 
     public function alpha_insertShopifyVariant(Merchants $merchant,

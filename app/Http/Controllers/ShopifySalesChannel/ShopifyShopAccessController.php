@@ -51,8 +51,7 @@ class ShopifyShopAccessController extends Controller
             if(!is_null($status))
             {
                 $install_info = $status->toArray();
-                unset($install_info['id']);
-                unset($install_info['nonce']);
+                //unset($install_info['id']);
                 unset($install_info['nonce']);
                 unset($install_info['auth_code']);
                 unset($install_info['deleted_at']);
@@ -60,22 +59,24 @@ class ShopifyShopAccessController extends Controller
                 $response = [
                     'url' => $data['shop'],
                     'status' => $status->toArray(),
-                    'allcommerce_merchant' => []
+                    'allcommerce_shop' => []
                 ];
 
                 // If merchant is linked, send merchant info or []
-                $merchant = $status->allcommerce_merchant()->first();
+                $shop = $status->shop()->with('merchant')
+                    ->first();
 
-                if(!is_null($merchant))
+                if(!is_null($shop))
                 {
-                    $response['allcommerce_merchant'] = $merchant->toArray();
+                    $response['allcommerce_shop'] = $shop->toArray();
+                    $response['allcommerce_merchant'] = $shop->merchant->toArray();
                 }
 
-                if($funnel = $this->funnels->getDefaultFunnelByShop('shopify', $install_info['uuid']))
+                if($funnel = $this->funnels->getDefaultFunnelByShop('shopify', $install_info['id']))
                 {
                     $fun = [
                         'name' => $funnel->funnel_name,
-                        'url' => 'https://'.$data['shop'].'/a/sales/secure/checkout/'.$funnel->uuid
+                        'url' => 'https://'.$data['shop'].'/a/sales/secure/checkout/'.$funnel->id
                     ];
 
                     $response['funnel'] = $fun;

@@ -2,53 +2,52 @@
 
 namespace App;
 
+use App\Shops;
 use App\Merchants;
-use App\Traits\UuidModel;
+use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MerchantInventory extends Model
 {
-    use SoftDeletes, UuidModel;
+    use SoftDeletes, Uuid;
 
-    protected $hidden = ['id', 'deleted_at'];
+    protected $hidden = ['deleted_at'];
 
-    public function alpha_insertShopifyItem(Merchants $merchant, array $data)
-    {
-        $results = false;
+    /**
+     * The "type" of the auto-incrementing ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
 
-        $item = new $this();
-        $item->merchant_uuid = $merchant->uuid;
-        $item->platform_id = $data['id'];
-        $item->platform = 'shopify';
-        $item->title = $data['title'];
-        $item->body_html = $data['body_html'];
-        $item->vendor = $data['vendor'];
-        $item->product_type = $data['product_type'];
-        $item->handle = $data['handle'];
-        $item->handle = $data['published_at'];
-        $item->tags = $data['tags'];
-        if($item->save())
-        {
-            $results = $item;
-        }
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
 
-        return $results;
-    }
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = [];
 
     public function variants()
     {
-        return $this->hasMany('App\InventoryVariants', 'inventory_uuid', 'uuid');
+        return $this->hasMany('App\InventoryVariants', 'inventory_id', 'platform_id');
     }
 
     public function variant_options()
     {
-        return $this->hasMany('App\VariantsOptions', 'inventory_uuid', 'uuid');
+        return $this->hasMany('App\VariantsOptions', 'inventory_id', 'platform_id');
     }
 
     public function images()
     {
-        return $this->hasMany('App\InventoryImages', 'inventory_uuid', 'uuid');
+        return $this->hasMany('App\InventoryImages', 'inventory_id', 'platform_id');
     }
 
     public function getShopDefaultItem($shop_install_id)

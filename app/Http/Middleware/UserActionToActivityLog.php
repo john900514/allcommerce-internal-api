@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Sentry;
 use Closure;
 use Throwable;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Models\Activity;
 
 class UserActionToActivityLog
