@@ -67,6 +67,13 @@ class GenerateFirstCheckoutFunnel implements ShouldQueue
                     'options'  => $option_ids
                 ],
                 'active' => 1
+            ],
+            [
+                'funnel_uuid' => $funnel->id,
+                'funnel_attribute' => 'blade-template',
+                'funnel_value' => 'checkouts.default.experience',
+                'funnel_misc_json' => [],
+                'active' => 1
             ]
         ];
 
