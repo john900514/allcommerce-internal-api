@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\ShopifySalesChannel;
 
-use App\CheckoutFunnels;
 use App\Merchants;
+use App\CheckoutFunnels;
 use App\ShopifyInstalls;
 use Illuminate\Http\Request;
 use Ixudra\Curl\Facades\Curl;
@@ -76,7 +76,7 @@ class ShopifyShopAccessController extends Controller
                 {
                     $fun = [
                         'name' => $funnel->funnel_name,
-                        'url' => 'https://'.$data['shop'].'/a/sales/secure/checkout/'.$funnel->id
+                        'url' => 'https://'.$data['shop'].env('SHOPIFY_PROXY_URI', '/a/sales').'/secure/checkout/'.$funnel->id
                     ];
 
                     $response['funnel'] = $fun;

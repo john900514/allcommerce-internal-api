@@ -14,7 +14,30 @@ class Merchants extends Model
 {
     use HasRolesAndAbilities, LogsActivity, Notifiable, SoftDeletes, Uuid;
 
-    protected $hidden = ['id', 'deleted_at'];
+    protected $primaryKey  = 'id';
+
+    /**
+     * The "type" of the auto-incrementing ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = [];
+
+    protected $hidden = ['deleted_at'];
 
     protected $casts = [
         'id' => 'uuid',
