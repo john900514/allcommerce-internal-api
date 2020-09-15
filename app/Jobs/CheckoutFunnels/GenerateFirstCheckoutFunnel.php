@@ -82,10 +82,12 @@ class GenerateFirstCheckoutFunnel implements ShouldQueue
             $attributes->insert($payload);
         }
 
+        /*
         activity()
             ->causedBy($this->active_install)
             ->performedOn($funnel)
             ->withProperties([$funnel_payload, $attr_payload])
             ->log('Set up a merchant\'s first Checkout Funnel');
+        */
     }
 }
