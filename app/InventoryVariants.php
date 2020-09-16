@@ -88,4 +88,9 @@ class InventoryVariants extends Model
 
         return $results;
     }
+
+    public function product()
+    {
+        return $this->belongsTo('App\MerchantInventory', 'inventory_id', 'platform_id');
+    }
 }

@@ -39,6 +39,16 @@ class CheckoutFunnels extends Model
         'shop_install_id' => 'uuid',
     ];
 
+    public function shop()
+    {
+        return $this->belongsTo('App\Shops', 'shop_id', 'id');
+    }
+
+    public function attributes()
+    {
+        return $this->hasMany('App\CheckoutFunnelAttributes', 'funnel_uuid', 'id');
+    }
+
     public function getAllActiveFunnels($platform, $shop_uuid)
     {
         $results = [];
@@ -87,6 +97,44 @@ class CheckoutFunnels extends Model
         if(!is_null($record) > 0)
         {
             $results = $record;
+        }
+
+        return $results;
+    }
+
+    public function getProducts()
+    {
+        $results = [];
+
+        $item_attrs = $this->attributes()->where('funnel_attribute', 'LIKE','%item-%')->get();
+
+        if(count($item_attrs) > 0)
+        {
+            foreach($item_attrs as $attr)
+            {
+                $data = $attr['funnel_misc_json'];
+                $variant = array_key_exists('variant', $data) ? $data['variant'] : null;
+                $qty =  array_key_exists('qty', $data) ? $data['qty'] : 0;
+
+                if(!is_null($variant))
+                {
+                    $variant_record = InventoryVariants::find($variant);
+
+                    if(!is_null($variant_record))
+                    {
+                        $product = $variant_record->product()->first();
+
+                        if(!is_null($product))
+                        {
+                            $results[] = [
+                                'product' => $product->id,
+                                'variant' => $variant_record->id,
+                                'qty' => $qty
+                            ];
+                        }
+                    }
+                }
+            }
         }
 
         return $results;

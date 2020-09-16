@@ -41,6 +41,12 @@ Route::group(['middleware'=> ['auth:api', 'scopes']], function() {
     });
 });
 
+// @todo - fix oauth to place the following routes back inside ['auth:api', 'scopes']
+Route::group(['prefix'=> 'leads'], function() {
+    Route::post('/', 'Leads\LeadsController@createOrUpdate');
+});
+// @todo - fix oauth to place the routes above back inside ['auth:api', 'scopes']
+
 Route::group(['middleware' => ['shopify.hmac']], function () {
     Route::group(['prefix'=> 'shopify'], function() {
         Route::group(['prefix'=> 'installer'], function() {

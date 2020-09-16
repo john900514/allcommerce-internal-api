@@ -94,6 +94,6 @@ class Merchants extends Model
 
     public function inventory()
     {
-        return $this->hasMany('App\MerchantInventory', 'merchant_uuid', 'uuid');
+        return $this->hasMany('App\MerchantInventory', 'merchant_uuid', 'id');
     }
 }
