@@ -10,6 +10,7 @@
     "require": {
         "php": "^7.2",
         "fideloper/proxy": "^4.0",
+        "fruitcake/laravel-cors": "^2.0",
         "goldspecdigital/laravel-eloquent-uuid": "^6.0",
         "ixudra/curl": "^6.17",
         "laminas/laminas-diactoros": "^2.2",
