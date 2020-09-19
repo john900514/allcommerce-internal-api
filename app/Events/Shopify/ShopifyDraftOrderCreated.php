@@ -3,8 +3,6 @@
 namespace App\Events\Shopify;
 
 use App\Leads;
-use App\BillingAddresses;
-use App\ShippingAddresses;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -14,23 +12,22 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class ShopifyCustomerCreated extends ShouldBeStored
+class ShopifyDraftOrderCreated extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $shipping, $billing, $lead;
+    public $lead, $checkout_details;
+
     /**
      * Create a new event instance.
-     * @param ShippingAddresses $shipping
-     * @param BillingAddresses $billing
      * @param Leads $lead
+     * @param array $checkout_details
      * @return void
      */
-    public function __construct(ShippingAddresses $shipping, BillingAddresses $billing, Leads $lead)
+    public function __construct(Leads $lead, array $checkout_details)
     {
-        $this->shipping = $shipping;
-        $this->billing = $billing;
         $this->lead = $lead;
+        $this->checkout_details = $checkout_details;
     }
 
     /**
@@ -43,18 +40,13 @@ class ShopifyCustomerCreated extends ShouldBeStored
         return new PrivateChannel('channel-name');
     }
 
-    public function getShipping()
-    {
-        return $this->shipping;
-    }
-
-    public function getBilling()
-    {
-        return $this->billing;
-    }
-
     public function getLead()
     {
         return $this->lead;
+    }
+
+    public function getCheckoutDetails()
+    {
+        return $this->checkout_details;
     }
 }

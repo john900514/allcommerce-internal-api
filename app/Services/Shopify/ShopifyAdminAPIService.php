@@ -7,10 +7,7 @@ use App\Services\AnAPIService;
 
 class ShopifyAdminAPIService extends AnAPIService
 {
-    public function __construct()
-    {
-
-    }
+    public function __construct() {}
 
     public function getCustomer(ShopifyInstalls $install, $query)
     {
@@ -42,6 +39,28 @@ class ShopifyAdminAPIService extends AnAPIService
         ];
 
         $api_url = 'https://'.$install->shopify_store_url.'/admin/api/2020-07/customers/'.$payload['customer']['id'].'.json?';
+
+        return $this->put($api_url, $payload, $headers);
+    }
+
+    public function postDraftOrder(ShopifyInstalls $install, $payload)
+    {
+        $headers = [
+            'X-Shopify-Access-Token: '.$install->access_token
+        ];
+
+        $api_url = 'https://'.$install->shopify_store_url.'/admin/api/2020-07/draft_orders.json';
+
+        return $this->post($api_url, $payload, $headers);
+    }
+
+    public function updateDraftOrder(ShopifyInstalls $install, $payload)
+    {
+        $headers = [
+            'X-Shopify-Access-Token: '.$install->access_token
+        ];
+
+        $api_url = 'https://'.$install->shopify_store_url.'/admin/api/2020-07/draft_orders/'.$payload['draft_order']['id'].'.json';
 
         return $this->put($api_url, $payload, $headers);
     }

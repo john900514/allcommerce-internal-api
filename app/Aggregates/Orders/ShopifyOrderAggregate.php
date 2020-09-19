@@ -8,6 +8,8 @@ use App\Events\Leads\EmailUpdated;
 use App\Events\Leads\LeadCreated;
 use App\Events\Shopify\ShopifyCustomerCreated;
 use App\Events\Shopify\ShopifyCustomerUpdated;
+use App\Events\Shopify\ShopifyDraftOrderCreated;
+use App\Events\Shopify\ShopifyDraftOrderUpdated;
 use App\Leads;
 use App\ShippingAddresses;
 use Illuminate\Support\Facades\Validator;
@@ -111,6 +113,7 @@ class ShopifyOrderAggregate extends AggregateRoot
             }
             else
             {
+                // if exists, @todo - check if there are any changes needing to be made
                 $this->recordThat(new ShopifyCustomerUpdated($this->shipping_address, $this->billing_address, $this->lead_record));
                 $this->persist();
             }
@@ -144,27 +147,47 @@ class ShopifyOrderAggregate extends AggregateRoot
             'email_address' => $this->email_address,
             'billing_address' => $this->billing_address,
             'shipping_address' => $this->shipping_address,
-            'shopify_customer' => $this->shopify_customer
+            'shopify_customer' => (!is_null($this->shopify_customer)) ? $this->shopify_customer->toArray() : null
         ];
 
         $validated = Validator::make($req_map, [
-            'line_items' => 'required|array', // not empty
-            'lead_record' => 'required', // Is a lead model
-            'billing_phone' => 'required', // is a phone number
-            'shipping_phone' => 'required', // is a phone number
-            'email_address' => 'required', // is an email address
-            'billing_address' => 'required', // is a BillingAddresses Model
-            'shipping_address' => 'required', //is a Shipping Addresses model
-            'shopify_customer' => 'required', // is a lead attributes value
+            'line_items'       => 'required|array', // not empty
+            'lead_record'      => 'required', // Is a lead model
+            //'billing_phone'    => 'required|regex:/^(?:\([2-9]\d{2}\)\ ?|[2-9]\d{2}(?:\-?|\ ?))[2-9]\d{2}[- ]?\d{4}$/|min:10', // is a phone number
+            //'shipping_phone'   => 'required|regex:/^(?:\([2-9]\d{2}\)\ ?|[2-9]\d{2}(?:\-?|\ ?))[2-9]\d{2}[- ]?\d{4}$/|min:10', // is a phone number
+            'email_address'    => 'required|email:rfc,dns', // is an email address
+            'billing_address'  => 'required', // is a BillingAddresses Model
+            'shipping_address' => 'required', //is a ShippingAddresses model
+            'shopify_customer' => 'required|array', // is a lead attributes value
         ]);
 
-        if($failed = $validated->fails())
+        if(!($failed = $validated->fails()))
         {
-            // Nothing, it's not ready.
-        }
-        else
-        {
-            // Run the LeadQualifiedForDraftOrder event
+            // check for a DraftOrder record in lead_attributes
+            $customer_attr = $this->lead_record->attributes()
+                ->whereName('shopifyDraftOrder')
+                ->first();
+
+            $products = [
+                'products' => $req_map['line_items'],
+                'customer' => $req_map['shopify_customer']
+            ];
+
+            if(is_null($customer_attr))
+            {
+                // if not exists, trigger ShopifyDraftOrderCreated
+
+                $this->recordThat(new ShopifyDraftOrderCreated($this->lead_record, $products));
+                $this->persist();
+            }
+            else
+            {
+                // if exists, @todo - check if there are any changes needing to be made
+                // trigger ShopifyDraftOrderUpdated
+                $this->recordThat(new ShopifyDraftOrderUpdated($this->lead_record, $products));
+                $this->persist();
+            }
+
         }
 
         return $this;

@@ -244,7 +244,7 @@ class CreateShopifyCustomer implements ShouldQueue
                     if(count($response1['customers']) > 0)
                     {
                         // @todo - attempt to find the customer? Hopefully there's only one!
-                        $results = $response1['customers'];
+                        $results = $response1['customers'][0];
                     }
                 }
             }
