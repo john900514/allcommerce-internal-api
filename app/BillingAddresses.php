@@ -42,4 +42,39 @@ class BillingAddresses extends Model
         'client_uuid' => 'uuid',
         'misc' => 'collection',
     ];
+
+    public function insert(array $schema)
+    {
+        $results = false;
+
+        $model = new $this();
+        foreach($schema as $col => $val)
+        {
+            $model->$col = $val;
+        }
+
+        if($model->save())
+        {
+            $results = $model;
+        }
+
+        return $results;
+    }
+
+    public function updateMe(array $schema)
+    {
+        $results = false;
+
+        foreach($schema as $col => $val)
+        {
+            $this->$col = $val;
+        }
+
+        if($this->save())
+        {
+            $results = $this;
+        }
+
+        return $results;
+    }
 }

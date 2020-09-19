@@ -2,12 +2,14 @@
 
 namespace App\Actions\Leads;
 
+use App\Leads;
 use App\Actions\Action;
 use App\CheckoutFunnels;
-use App\Leads;
 
 class CreateOrUpdateLeadBaseAction implements Action
 {
+    protected $event_aggregate;
+
     public function __construct()
     {
 
@@ -49,10 +51,10 @@ class CreateOrUpdateLeadBaseAction implements Action
         return $results;
     }
 
-    protected function runPostProcessing($payload, Leads $lead) : void
+    protected function runPostProcessing(array $payload, Leads $lead, array $checkout_details) : void
     {
         $this->processEmailList($payload, $lead);
-        $this->processShopifyDraftOrderIfQualified($payload, $lead);
+        $this->processShopifyDraftOrderIfQualified($lead, $checkout_details);
     }
 
     private function processEmailList($payload, Leads $lead) : void
@@ -88,17 +90,7 @@ class CreateOrUpdateLeadBaseAction implements Action
         }
     }
 
-    protected function triggerPhoneTableCheck($email, $deets) : void
-    {
-
-    }
-
-    protected function triggerEmailTableCheck($email, $deets) : void
-    {
-
-    }
-
-    private function processShopifyDraftOrderIfQualified($payload, Leads $lead) : void
+    private function processShopifyDraftOrderIfQualified(Leads $lead, array $checkout_details) : void
     {
         $shop = $lead->shop()->first();
 
@@ -110,7 +102,22 @@ class CreateOrUpdateLeadBaseAction implements Action
             // Should be shopify or skip.
             if((!is_null($shop_type_record)) && ($shop_type_record->name == 'Shopify'))
             {
-                // @todo - fire job to ping shopify to draft the order and store in the DB as an attribute.
+                if(!is_null($lead->email))
+                {
+                    $this->event_aggregate = $this->event_aggregate->addEmailAddress($lead->email);
+                }
+
+                if(!is_null($billing = $lead->billing_address()->first()))
+                {
+                    $this->event_aggregate = $this->event_aggregate->addBillingAddress($billing);
+                }
+
+                if(!is_null($shipping = $lead->shipping_address()->first()))
+                {
+                    $this->event_aggregate = $this->event_aggregate->addShippingAddress($shipping);
+                }
+
+                $this->event_aggregate->createOrUpdateDraftOrder();
             }
         }
     }

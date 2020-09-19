@@ -2,10 +2,10 @@
 
 namespace App\Actions\Leads;
 
-use App\Emails;
+use App\Aggregates\Orders\ShopifyOrderAggregate;
 use App\Leads;
+use App\Emails;
 use App\LeadAttributes;
-use App\Actions\Action;
 use App\CheckoutFunnels;
 
 class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
@@ -67,15 +67,12 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
                         $lead = $this->createLead($payload, $deets);
 
                         // fire email tables job.
-                        $this->triggerEmailTableCheck($email_address, $deets);
+                        // $this->triggerEmailTableCheck($email_address, $deets);
                     }
                 }
 
                 if($lead)
                 {
-                    $this->runPostProcessing($payload, $lead);
-
-                    // @todo - populate missing items, from doing the update logic.
                     $results = [
                         'success' => true,
                         'lead' => [
@@ -112,8 +109,21 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
                         }
                     }
 
-                    // @todo - attempt to locate the shipping address here
-                    // @todo - attempt to locate the billing address here
+                    // attempt to locate the shipping address here
+                    $shipping = $lead->shipping_address()->first();
+                    if(!is_null($shipping))
+                    {
+                        $results['shipping_address'] = $shipping->toArray();
+                    }
+
+                    // attempt to locate the billing address here
+                    $billing = $lead->billing_address()->first();
+                    if(!is_null($billing))
+                    {
+                        $results['billing_address'] = $billing->toArray();
+                    }
+
+                    $this->runPostProcessing($payload, $lead, $deets);
                 }
             }
         }
@@ -126,7 +136,6 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
     }
 
 
-
     private function createLead(array $payload, $checkout_details)
     {
         $results = false;
@@ -136,7 +145,9 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
         $lead = new $this->leads;
         $lead->reference_type = $attrs['checkoutType'];
         $lead->reference_uuid = $attrs['checkoutId'];
+
         $lead->email = $attrs['value'];
+
         $lead->shop_uuid = $checkout_details['shop_id'];
         $lead->merchant_uuid = $checkout_details['merchant_id'];
         $lead->client_uuid = $checkout_details['client_id'];
@@ -159,6 +170,10 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
         if($lead->save())
         {
             $results = $lead;
+
+            $this->event_aggregate = ShopifyOrderAggregate::retrieve($lead->id)
+                ->addLeadRecord($lead)
+                ->addLineItems($checkout_details['products']);
         }
 
         return $results;
@@ -183,9 +198,16 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
 
         if(!is_null($lead))
         {
+            $this->event_aggregate = ShopifyOrderAggregate::retrieve($lead->id)
+                ->addLeadRecord($lead, false)
+                ->addLineItems($checkout_details['products']);
+
             $lead->reference_type = $payload['attributes']['checkoutType'];
             $lead->reference_uuid = $payload['attributes']['checkoutId'];
+
+            // add the name and phone here with the shipping since that's the person getting the stuff
             $lead->email = $payload['attributes']['value'];
+
             $lead->shop_uuid = $checkout_details['shop_id'];
             $lead->merchant_uuid = $checkout_details['merchant_id'];
             $lead->client_uuid = $checkout_details['client_id'];

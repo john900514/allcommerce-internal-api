@@ -108,4 +108,24 @@ class Leads extends Model
     {
         return $this->belongsTo('App\Clients', 'client_uuid', 'id');
     }
+
+    public function shipping_address()
+    {
+        return $this->hasOne('App\ShippingAddresses', 'lead_uuid', 'id');
+    }
+
+    public function billing_address()
+    {
+        return $this->hasOne('App\BillingAddresses', 'lead_uuid', 'id');
+    }
+
+    public function email_record()
+    {
+        return $this->hasOne('App\Emails', 'email', 'email');
+    }
+
+    public function shop_install()
+    {
+        return $this->belongsTo('App\ShopifyInstalls', 'shop_uuid', 'shop_uuid');
+    }
 }

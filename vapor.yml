@@ -12,9 +12,12 @@ environments:
     database: allcommerce
     database-user: acuser
     runtime: php-7.4
+    queue-concurrency: 1
     queues:
       - aco-production-shopify
       - aco-production-funnels
+      - aco-production-events
+      - aco-production-emails
     build:
       - 'composer install --no-dev'
       - 'php artisan event:cache'
@@ -31,9 +34,12 @@ environments:
       database: allcommerce
       database-user: acuser
       runtime: php-7.4
+      queue-concurrency: 1
       queues:
         - aco-staging-shopify
         - aco-staging-funnels
+        - aco-staging-events
+        - aco-staging-emails
       build:
         - 'composer install'
         - 'php artisan event:cache'
@@ -49,9 +55,12 @@ environments:
       database: allcommerce
       database-user: acuser
       runtime: php-7.4
+      queue-concurrency: 1
       queues:
         - aco-develop-shopify
         - aco-develop-funnels
+        - aco-develop-events
+        - aco-develop-emails
       build:
         - 'apt-get update && apt-get install -y npm'
         - 'composer install --classmap-authoritative'
