@@ -49,6 +49,9 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
 
                     if(!is_null($email_model))
                     {
+                        // This is the new order flow, so don't look up the old lead.
+                        $lead = $this->createLead($payload, $deets);
+                        /*
                         // If email record exists, cross-reference the leads table for record or skip
                         if($lead = $this->leads->findLeadViaEmailAddress($email_address, $shop_id, $merchant_id, $client_id))
                         {
@@ -60,6 +63,7 @@ class CreateOrUpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
                             // send to create lead
                             $lead = $this->createLead($payload, $deets);
                         }
+                        */
                     }
                     else
                     {

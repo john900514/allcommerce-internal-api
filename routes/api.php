@@ -56,6 +56,7 @@ Route::group(['middleware' => ['shopify.hmac']], function () {
 
         Route::group(['prefix'=> 'shop'], function() {
             Route::post('/', 'ShopifySalesChannel\ShopifyShopAccessController@get_basic_store_info');
+            Route::post('/shipping-rates', 'ShopifySalesChannel\ShopifyShopAccessController@get_store_shipping_rates');
 
             Route::group(['prefix'=> 'merchant'], function() {
                 Route::get('/', 'ShopifySalesChannel\ShopifyShopAccessController@get_assigned_merchant_info');

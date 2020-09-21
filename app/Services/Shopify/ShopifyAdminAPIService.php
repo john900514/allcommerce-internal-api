@@ -9,6 +9,17 @@ class ShopifyAdminAPIService extends AnAPIService
 {
     public function __construct() {}
 
+    public function getShippingZones(ShopifyInstalls $install)
+    {
+        $headers = [
+            'X-Shopify-Access-Token: '.$install->access_token
+        ];
+
+        $api_url = 'https://'.$install->shopify_store_url.'/admin/api/2020-07/shipping_zones.json';
+
+        return $this->get($api_url, null, $headers);
+    }
+
     public function getCustomer(ShopifyInstalls $install, $query)
     {
         $headers = [

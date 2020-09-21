@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ShopifySalesChannel;
 
 use App\Merchants;
 use App\CheckoutFunnels;
+use App\Services\Shopify\ShopifyAdminAPIService;
 use App\ShopifyInstalls;
 use Illuminate\Http\Request;
 use Ixudra\Curl\Facades\Curl;
@@ -87,6 +88,55 @@ class ShopifyShopAccessController extends Controller
 
                 $results = ['success' => true, 'shop' => $response];
 
+            }
+        }
+
+        return response()->json($results);
+    }
+
+    public function get_store_shipping_rates(ShopifyInstalls $installs, ShopifyAdminAPIService $service)
+    {
+        $results = ['success' => false, 'reason' => 'Shop not found!'];
+
+        $data = $this->request->all();
+
+        $validated = Validator::make($data, [
+            'shop_url' => 'bail|required|exists:App\ShopifyInstalls,shopify_store_url',
+        ]);
+
+        if ($validated->fails())
+        {
+            foreach($validated->errors()->toArray() as $col => $msg)
+            {
+                $results['reason'] = $msg[0];
+                break;
+            }
+        }
+        else
+        {
+            $install = $installs->whereShopifyStoreUrl($data['shop_url'])->first();
+
+            if($zones = $service->getShippingZones($install))
+            {
+                if(array_key_exists('shipping_zones', $zones))
+                {
+                    $rates = $zones['shipping_zones'][0];
+                    $res = [
+                        'priceBased' => $rates['price_based_shipping_rates'],
+                        'weightBased' => $rates['weight_based_shipping_rates']
+                    ];
+                    // curate the response if needed and return
+                    $results = ['success' => true, 'shipping_rates' => $res];
+                }
+                else
+                {
+                    // curate and send back the Shopify fail message
+                    $results['reason'] = 'Response from Shopify - '.$zones['error'];
+                }
+            }
+            else
+            {
+                $results['reason'] = 'Could not contact Shopify!';
             }
         }
 
