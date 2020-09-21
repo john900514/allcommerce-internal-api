@@ -97,12 +97,13 @@ class CreateShopifyDraftOrder implements ShouldQueue
             'address1' => $address->address,
             'address2' => (!is_null($address->address2)) ? $address->address2 : ((!is_null($address->apt)) ? $address->apt : ''),
             'city' => $address->city,
-            'country_code' => $address->country,
+            'country' => strtoupper($address->country),
             'first_name' => $address->first_name,
             'last_name' => $address->last_name,
             'name' => "{$address->first_name} $address->last_name",
             'phone' => $address->phone,
-            'province_code' => $address->state
+            'province' => $address->state,
+            'zip' => $address->zip
         ];
 
         return $results;
@@ -124,7 +125,8 @@ class CreateShopifyDraftOrder implements ShouldQueue
                         'variant_id' => $product_variant->inventory_item_id,
                         'product_id' => $product_variant->inventory_id,
                         'quantity' => $line_item['qty'],
-                        'sku' => $product_variant->sku
+                        'sku' => $product_variant->sku,
+                        'taxable' => true
                     ];
                 }
             }
