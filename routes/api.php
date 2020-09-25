@@ -43,7 +43,16 @@ Route::group(['middleware'=> ['auth:api', 'scopes']], function() {
 
 // @todo - fix oauth to place the following routes back inside ['auth:api', 'scopes']
 Route::group(['prefix'=> 'leads'], function() {
+    // Unsupported
     Route::post('/', 'Leads\LeadsController@createOrUpdate');
+
+    // New Lead Management Routes - Decoupled.
+    Route::post('/email', 'Leads\LeadsController@createWithEmail');
+    Route::put('/email', 'Leads\LeadsController@updateWithEmail');
+
+    Route::post('/shipping', 'Leads\LeadsController@createWithShipping');
+    Route::put('/shipping', 'Leads\LeadsController@updateWithShipping');
+    Route::put('/billing', 'Leads\LeadsController@updateWithBilling');
 });
 // @todo - fix oauth to place the routes above back inside ['auth:api', 'scopes']
 

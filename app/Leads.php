@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Aggregates\Orders\ShopifyOrderAggregate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
@@ -127,5 +128,17 @@ class Leads extends Model
     public function shop_install()
     {
         return $this->belongsTo('App\ShopifyInstalls', 'shop_uuid', 'shop_uuid');
+    }
+
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::created(function ($lead) {
+
+        });
     }
 }
