@@ -14,6 +14,7 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middleware = [
+        \Fruitcake\Cors\HandleCors::class,
         \App\Http\Middleware\TrustProxies::class,
         \App\Http\Middleware\CheckForMaintenanceMode::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
@@ -43,6 +44,12 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\UserActionToActivityLog::class,
         ],
+        'faux-auth' => [
+            'throttle:30,1',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\Tokens\ValidateAPIToken::class
+            //\App\Http\Middleware\UserActionToActivityLog::class,
+        ]
     ];
 
     /**
@@ -64,7 +71,12 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'scopes' => \App\Http\Middleware\ApplyScopes::class,
-        'shopify.hmac' => \App\Http\Middleware\VerifyShopifyHMAC::class
+        'shopify.hmac' => \App\Http\Middleware\VerifyShopifyHMAC::class,
+
+        'faux-auth.merchant' =>
+            \App\Http\Middleware\Tokens\RequiresMerchantUUID::class,
+        'faux-auth.shop' => \App\Http\Middleware\Tokens\RequiresShopUuid::class,
+        'faux-auth.host' => \App\Http\Middleware\Tokens\RequiresHostToken::class,
     ];
 
     /**

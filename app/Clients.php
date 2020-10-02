@@ -58,4 +58,14 @@ class Clients extends Model
 
         return $results;
     }
+
+    public function merchants()
+    {
+        return $this->hasMany('App\Merchants', 'client_id', 'id');
+    }
+
+    public function shops()
+    {
+        return $this->hasMany('App\Shops', 'client_id', 'id');
+    }
 }

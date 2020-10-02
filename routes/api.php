@@ -30,14 +30,42 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::group(['middleware'=> ['auth:api', 'scopes']], function() {
-
+    /*
     Route::group(['prefix'=> 'merchant'], function() {
         Route::get('/', 'MerchantAccountController@index');
     });
+    */
 
     Route::group(['prefix'=> 'inventory'], function() {
         Route::get('/', 'MerchantInventoryController@index');
         Route::post('/adhoc-inventory-import', 'MerchantInventoryController@rogue_import_biatch');
+    });
+});
+
+Route::group(['middleware'=> ['faux-auth']], function() {
+    Route::group(['prefix'=> 'client'], function() {
+        Route::get('/', 'ClientResourceController@index');
+    });
+
+    Route::group(['middleware'=> ['faux-auth.merchant']], function() {
+        Route::group(['prefix'=> 'merchant'], function() {
+            Route::get('/', 'MerchantResourceController@index');
+        });
+    });
+
+    Route::group(['middleware'=> ['faux-auth.shop']], function() {
+        Route::group(['prefix'=> 'shop'], function() {
+            Route::get('/', 'ShopResourceController@index');
+        });
+    });
+    Route::group(['prefix'=> 'oauth'], function() {
+        Route::put('/token', 'Auth\FauxAuthenticationController@update');
+        Route::put('/token/active', 'Auth\FauxAuthenticationController@active');
+        Route::delete('/token', 'Auth\FauxAuthenticationController@delete');
+
+        Route::group(['middleware'=> ['faux-auth.host']], function() {
+            Route::post('/token', 'Auth\FauxAuthenticationController@create');
+        });
     });
 });
 

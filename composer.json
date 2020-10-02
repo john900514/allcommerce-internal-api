@@ -23,7 +23,8 @@
         "sentry/sentry-laravel": "1.7.0",
         "silber/bouncer": "v1.0.0-rc.6",
         "spatie/laravel-activitylog": "^3.9",
-        "spatie/laravel-event-sourcing": "^4.3"
+        "spatie/laravel-event-sourcing": "^4.3",
+        "staudenmeir/eloquent-json-relations": "^1.1"
     },
     "require-dev": {
         "facade/ignition": "^1.4",
