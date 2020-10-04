@@ -36,6 +36,10 @@ class CreateLeadByEmail extends CreateOrUpdateLeadBaseAction
                 $lead->reference_uuid = $checkoutId;
 
                 $lead->email = $payload['email'];
+                if(array_key_exists('ip', $payload))
+                {
+                    $lead->ip_address = $payload['ip'];
+                }
 
                 $lead->shop_uuid = $checkout_details['shop_id'];
                 $lead->merchant_uuid = $checkout_details['merchant_id'];

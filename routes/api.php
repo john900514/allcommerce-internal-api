@@ -29,6 +29,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $payload;
 });
 
+// @todo - Deprecated
 Route::group(['middleware'=> ['auth:api', 'scopes']], function() {
     /*
     Route::group(['prefix'=> 'merchant'], function() {
@@ -56,8 +57,22 @@ Route::group(['middleware'=> ['faux-auth']], function() {
     Route::group(['middleware'=> ['faux-auth.shop']], function() {
         Route::group(['prefix'=> 'shop'], function() {
             Route::get('/', 'ShopResourceController@index');
+            Route::get('/shipping-methods', 'ShopResourceController@shipping_methods');
+            Route::get('/shipping-rates', 'ShopResourceController@shipping_methods');
+        });
+
+        Route::group(['prefix'=> 'leads'], function() {
+            // New Lead Management Routes - Decoupled.
+            Route::post('/email', 'Leads\LeadsController@createWithEmail');
+            Route::put('/email', 'Leads\LeadsController@updateWithEmail');
+
+            Route::post('/shipping', 'Leads\LeadsController@createWithShipping');
+            Route::put('/shipping', 'Leads\LeadsController@updateWithShipping');
+            Route::put('/billing', 'Leads\LeadsController@updateWithBilling');
         });
     });
+
+
     Route::group(['prefix'=> 'oauth'], function() {
         Route::put('/token', 'Auth\FauxAuthenticationController@update');
         Route::put('/token/active', 'Auth\FauxAuthenticationController@active');
@@ -69,20 +84,6 @@ Route::group(['middleware'=> ['faux-auth']], function() {
     });
 });
 
-// @todo - fix oauth to place the following routes back inside ['auth:api', 'scopes']
-Route::group(['prefix'=> 'leads'], function() {
-    // Unsupported
-    Route::post('/', 'Leads\LeadsController@createOrUpdate');
-
-    // New Lead Management Routes - Decoupled.
-    Route::post('/email', 'Leads\LeadsController@createWithEmail');
-    Route::put('/email', 'Leads\LeadsController@updateWithEmail');
-
-    Route::post('/shipping', 'Leads\LeadsController@createWithShipping');
-    Route::put('/shipping', 'Leads\LeadsController@updateWithShipping');
-    Route::put('/billing', 'Leads\LeadsController@updateWithBilling');
-});
-// @todo - fix oauth to place the routes above back inside ['auth:api', 'scopes']
 
 Route::group(['middleware' => ['shopify.hmac']], function () {
     Route::group(['prefix'=> 'shopify'], function() {

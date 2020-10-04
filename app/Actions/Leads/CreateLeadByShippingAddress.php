@@ -38,6 +38,11 @@ class CreateLeadByShippingAddress extends CreateOrUpdateLeadBaseAction
                 $lead->last_name  = $payload['shipping']['last_name'];
                 $lead->phone      = $payload['shipping']['phone'];
 
+                if(array_key_exists('ip', $payload))
+                {
+                    $lead->ip_address = $payload['ip'];
+                }
+
                 $lead->shop_uuid = $checkout_details['shop_id'];
                 $lead->merchant_uuid = $checkout_details['merchant_id'];
                 $lead->client_uuid = $checkout_details['client_id'];

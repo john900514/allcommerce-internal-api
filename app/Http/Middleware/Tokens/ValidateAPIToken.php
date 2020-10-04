@@ -39,7 +39,8 @@ class ValidateAPIToken
         }
         else
         {
-            $token = MerchantApiTokens::whereToken($headers['x-allcommerce-token'])
+            $ac_token = $headers['x-allcommerce-token'][0];
+            $token = MerchantApiTokens::whereToken($ac_token)
                 ->with('client')
                 ->first();
 

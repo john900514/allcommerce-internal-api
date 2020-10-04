@@ -113,7 +113,7 @@ class LeadsController extends Controller
             'email' => 'bail|required',
             'checkoutType' => 'bail|required|in:checkout_funnel',
             'checkoutId' => 'bail|required',
-            'shopUuid' => 'bail|required|exists:shops,id',
+            //'shopUuid' => 'bail|required|exists:shops,id',
             'emailList' => 'sometimes|required|boolean',
         ]);
 
@@ -127,6 +127,7 @@ class LeadsController extends Controller
         }
         else
         {
+            $data['ip'] = $this->request->ip();
             if($lead = $action->execute($data))
             {
                 $results = ['success' => true, 'lead_uuid' => $lead['id']];
@@ -146,7 +147,7 @@ class LeadsController extends Controller
             'shipping' => 'bail|required|array',
             'checkoutType' => 'bail|required|in:checkout_funnel',
             'checkoutId' => 'bail|required',
-            'shopUuid' => 'bail|required|exists:shops,id',
+            //'shopUuid' => 'bail|required|exists:shops,id',
 
             'billing' => 'bail|required|array',
             'emailList' => 'bail|required|boolean',
@@ -162,6 +163,7 @@ class LeadsController extends Controller
         }
         else
         {
+            $data['ip'] = $this->request->ip();
             if(($response = $action->execute($data)) && (is_array($response)))
             {
                 $results = array_merge(['success' => true], $response);

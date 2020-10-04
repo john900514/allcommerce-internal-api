@@ -38,4 +38,9 @@ class Shops extends Model
     {
         return $this->shop_type();
     }
+
+    public function shopify_install()
+    {
+        return $this->hasOne('App\ShopifyInstalls', 'shop_uuid', 'id');
+    }
 }

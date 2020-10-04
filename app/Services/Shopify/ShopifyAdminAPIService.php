@@ -20,6 +20,34 @@ class ShopifyAdminAPIService extends AnAPIService
         return $this->get($api_url, null, $headers);
     }
 
+    public function parseShippingZones(array $zones)
+    {
+        $results = [];
+
+        // Currently, we are only supporting price-based shipping rates
+
+        foreach($zones as $idx => $zone)
+        {
+            foreach($zone['price_based_shipping_rates'] as $idx => $rate)
+            {
+                $results[] = [
+                    //'handle' => 'shopify-'.rawurlencode($zone['name'])."-{$zone['price']}",
+                    'price'      => $rate['price'],
+                    'title'      => $rate['name'],
+                    'custom'     => true,
+                    'min_price'  => $rate['min_order_subtotal'],
+                    'max_price'  => $rate['max_order_subtotal'],
+                    'max_weight' => 0.00,
+                    'min_weight' => 0.00,
+                ];
+            }
+        }
+
+        // @todo - support weight based shipping rates
+
+        return $results;
+    }
+
     public function getCustomer(ShopifyInstalls $install, $query)
     {
         $headers = [

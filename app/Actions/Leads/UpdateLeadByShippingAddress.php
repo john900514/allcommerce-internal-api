@@ -160,14 +160,12 @@ class UpdateLeadByShippingAddress extends CreateOrUpdateLeadBaseAction
 
                 if(!is_null($shipping))
                 {
-                    $yes = true;
+                    // @todo - check if there's a draft order then update
+                    $yes = false;
                     if($yes)
                     {
-                        $aggy = $aggy->createShopifyDraftOrder();
-                    }
-                    else
-                    {
                         $aggy = $aggy->updateShopifyDraftOrder();
+                        //$aggy = $aggy->createShopifyDraftOrder();
                     }
                 }
 
