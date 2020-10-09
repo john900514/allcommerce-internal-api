@@ -71,7 +71,8 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
                                 }
                                 else
                                 {
-                                    //  @todo - should probably update the customer data here
+                                    //  update the customer data here Justin Case data is different.
+                                    $customer = $this->updateCustomerFromShopify($install, $lead, $shipping, $billing, $customer);
                                 }
 
                                 $record_customer = ($customer != false);
@@ -84,7 +85,8 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
                             {
                                 $customer = $this->getCustomerFromShopify($install, $lead);
 
-                                //  @todo - should probably update the customer data here
+                                //  update the customer data here Justin Case data is different.
+                                $customer = $this->updateCustomerFromShopify($install, $lead, $shipping, $billing, $customer);
                             }
 
                         }
@@ -284,6 +286,81 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
         }
 
         $response = $this->shopify->postCustomer($install, $payload);
+
+        if($response)
+        {
+            if(array_key_exists('customer', $response))
+            {
+                $results = $response['customer'];
+            }
+        }
+
+        return $results;
+    }
+
+    private function updateCustomerFromShopify(ShopifyInstalls $install, Leads $lead,  ShippingAddresses $shipping, BillingAddresses $billing, $shopify_customer)
+    {
+        $results = false;
+
+        $payload = [
+            'customer' => [
+                'id' => $shopify_customer['id'],
+                'first_name' => $lead->first_name,
+                'last_name'  => $lead->last_name,
+                'addresses'  => [
+                    [
+                        'address1' => $shipping->address,
+                        'city' => $shipping->city,
+                        'state' => $shipping->state,
+                        'zip' => $shipping->zip,
+                        'first_name' => $shipping->first_name,
+                        'last_name'  => $shipping->last_name,
+                        'country' => $shipping->country,
+                    ],
+                    [
+                        'address1' => $billing->address,
+                        'city' => $billing->city,
+                        'state' => $billing->state,
+                        'zip' => $billing->zip,
+                        'first_name' => $billing->first_name,
+                        'last_name'  => $billing->last_name,
+                        'country' => $billing->country,
+                    ]
+                ]
+            ]
+        ];
+
+        if(!is_null($lead->email))
+        {
+            $payload['customer']['email'] = $lead->email;
+        }
+
+        if(!is_null($shipping->email))
+        {
+            $payload['customer']['addresses'][0]['email'] = $shipping->email;
+        }
+
+        if(!is_null($billing->email))
+        {
+            $payload['customer']['addresses'][1]['email'] = $billing->email;
+        }
+
+        if(!is_null($lead->phone))
+        {
+            $payload['customer']['phone'] = $lead->phone;
+        }
+
+        if(!is_null($shipping->phone))
+        {
+            $payload['customer']['addresses'][0]['phone'] = $shipping->phone;
+        }
+
+        if(!is_null($billing->phone))
+        {
+            $payload['customer']['addresses'][1]['phone'] = $billing->phone;
+        }
+
+        $response = $this->shopify->updateCustomer($install, $payload);
 
         if($response)
         {
