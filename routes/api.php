@@ -69,6 +69,8 @@ Route::group(['middleware'=> ['faux-auth']], function() {
             Route::post('/shipping', 'Leads\LeadsController@createWithShipping');
             Route::put('/shipping', 'Leads\LeadsController@updateWithShipping');
             Route::put('/billing', 'Leads\LeadsController@updateWithBilling');
+
+            Route::post('/draftOrder/shippingMethod', 'Leads\LeadsController@draftOrderWithShippingMethod');
         });
     });
 

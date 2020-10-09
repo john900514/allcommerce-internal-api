@@ -224,6 +224,45 @@ class ShopifyOrderAggregate extends AggregateRoot
         return $this;
     }
 
+    public function addShopifyCustomerLeadAttribute($details, $record = true) : self
+    {
+        $this->shopify_customer = $details;
+
+        if($record) {
+            // create a new event. stash, $lead_uuid, payload array (hopefully it serializes lol).
+            $this->recordThat(new ShopifyCustomerCreated($details,$this->lead_record));
+        }
+
+        // @todo - in one of the projector, paste the logic in the CreateShopifyCustomer Job into function to save the data!
+        return $this;
+    }
+
+    public function addShopifyDraftOrderAttribute($details, $record = true) : self
+    {
+        $this->shopify_draft_order = $details;
+
+        if($record) {
+            // create a new event. stash, $lead_uuid, payload array (hopefully it serializes lol).
+            $this->recordThat(new ShopifyDraftOrderCreated($this->lead_record, $details));
+        }
+
+        // @todo - in one of the projector, paste the logic in the CreateShopifyDraftOrder Job into function to save the data!
+        return $this;
+    }
+
+    public function  updateShopifyDraftOrderAttribute($details, $record = true) : self
+    {
+        $this->shopify_draft_order = $details;
+
+        if($record) {
+            // create a new event. stash, $lead_uuid, payload array (hopefully it serializes lol).
+            $this->recordThat(new ShopifyDraftOrderUpdated($this->lead_record, $details));
+        }
+
+        // @todo - in one of the projector, paste the logic in the CreateShopifyDraftOrder Job into function to save the data!
+        return $this;
+    }
+
     public function createShopifyDraftOrder() : self
     {
         return $this;

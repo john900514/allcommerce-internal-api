@@ -43,4 +43,9 @@ class Shops extends Model
     {
         return $this->hasOne('App\ShopifyInstalls', 'shop_uuid', 'id');
     }
+
+    public function oauth_api_token()
+    {
+        return $this->hasOne('App\MerchantApiTokens', 'scopes->shop_id', 'id');
+    }
 }

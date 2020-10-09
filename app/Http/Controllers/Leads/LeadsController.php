@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Leads;
 
+use App\Actions\Leads\AccessDraftOrder;
 use App\Actions\Leads\CreateLeadByEmail;
 use App\Actions\Leads\CreateLeadByShippingAddress;
 use App\Actions\Leads\CreateOrUpdateLeadByEmail;
@@ -231,6 +232,39 @@ class LeadsController extends Controller
         }
         else
         {
+            if(($response = $action->execute($data)) && (is_array($response)))
+            {
+                $results = array_merge(['success' => true], $response);
+            }
+        }
+
+        return response()->json($results);
+    }
+
+    public function draftOrderWithShippingMethod(AccessDraftOrder $action)
+    {
+        $results = ['success' => false, 'reason' => 'Could not access draft order with the data given.'];
+
+        $data = $this->request->all();
+
+        $validated = Validator::make($data, [
+            'leadUuid' => 'bail|required|exists:leads,id',
+            'shippingMethod' => 'bail|required|array',
+        ]);
+
+        if($validated->fails())
+        {
+            foreach($validated->errors()->toArray() as $col => $msg)
+            {
+                $results['reason'] = $msg[0];
+                break;
+            }
+        }
+        else
+        {
+            $token = $this->request->header('x-allcommerce-token');
+            $data['token'] = $token;
+
             if(($response = $action->execute($data)) && (is_array($response)))
             {
                 $results = array_merge(['success' => true], $response);

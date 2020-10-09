@@ -126,12 +126,33 @@ class LeadsProjector extends Projector implements ShouldQueue
 
     public function onShopifyCustomerCreated(ShopifyCustomerCreated $event)
     {
-        CreateShopifyCustomer::dispatch($event->getShipping(), $event->getBilling(), $event->getLead())->onQueue("aco-".env('APP_URL')."-shopify");
+        if(!is_null($attr = $event->getLead()->attributes()->first()))
+        {
+            $customer_attr = new $attr;
+        }
 
+        if(!is_null($customer_attr))
+        {
+            $customer_attr->lead_uuid = $event->getLead()->id;
+            $customer_attr->name = 'shopifyCustomer';
+            $customer_attr->value = $event->getDetails()['customer']['id'];
+            $customer_attr->misc = $event->getDetails()['customer'];
+            $customer_attr->active = 1;
+            $customer_attr->shop_uuid = $event->getLead()->shop_uuid;
+            $customer_attr->merchant_uuid = $event->getLead()->merchant_uuid;
+            $customer_attr->client_uuid =$event->getLead()->client_uuid;
+            $customer_attr->save();
+        }
+
+
+        //CreateShopifyCustomer::dispatch($event->getShipping(), $event->getBilling(), $event->getLead())->onQueue("aco-".env('APP_URL')."-shopify");
+
+        /*
         if(!is_null($event->getLead()->email))
         {
             LinkEmailToBillShip::dispatch($event->getShipping(), $event->getBilling(), $event->getLead())->onQueue('aco-'.env('APP_ENV').'-emails');
         }
+        */
     }
 
     public function onShopifyCustomerUpdated(ShopifyCustomerUpdated $event)

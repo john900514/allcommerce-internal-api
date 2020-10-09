@@ -18,18 +18,16 @@ class ShopifyCustomerCreated extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $shipping, $billing, $lead;
+    private $details, $lead;
     /**
      * Create a new event instance.
-     * @param ShippingAddresses $shipping
-     * @param BillingAddresses $billing
+     * @param array $details
      * @param Leads $lead
      * @return void
      */
-    public function __construct(ShippingAddresses $shipping, BillingAddresses $billing, Leads $lead)
+    public function __construct(array $details, Leads $lead)
     {
-        $this->shipping = $shipping;
-        $this->billing = $billing;
+        $this->details = $details;
         $this->lead = $lead;
     }
 
@@ -43,14 +41,9 @@ class ShopifyCustomerCreated extends ShouldBeStored
         return new PrivateChannel('channel-name');
     }
 
-    public function getShipping()
+    public function getDetails()
     {
-        return $this->shipping;
-    }
-
-    public function getBilling()
-    {
-        return $this->billing;
+        return $this->details;
     }
 
     public function getLead()
