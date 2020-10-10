@@ -2,34 +2,31 @@
 
 namespace App\Events\Leads;
 
-use App\Emails;
 use App\Leads;
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class EmailUpdated extends ShouldBeStored
+class LineItemsAdded extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $email, $emails, $lead;
+    private $lead, $products;
     /**
      * Create a new event instance.
-     * @param string $email
-     * @param Emails $emails
      * @param Leads $lead
+     * @param array $products
      * @return void
      */
-    public function __construct(string $email, Emails $emails, Leads $lead)
+    public function __construct(Leads $lead, array $products)
     {
-        $this->email = $email;
-        $this->emails = $emails;
         $this->lead = $lead;
+        $this->products = $products;
     }
 
     /**
@@ -42,18 +39,17 @@ class EmailUpdated extends ShouldBeStored
         return new PrivateChannel('channel-name');
     }
 
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
-    public function getEmails()
-    {
-        return $this->emails;
-    }
-
     public function getLead()
     {
         return $this->lead;
     }
+
+    public function getProducts()
+    {
+        return $this->products;
+    }
+
+
 }
+
+

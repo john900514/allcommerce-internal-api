@@ -18,19 +18,21 @@ class ShopifyCustomerUpdated extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $shipping, $billing, $lead;
+    private $details, $shipping, $billing, $lead;
     /**
      * Create a new event instance.
      * @param ShippingAddresses $shipping
      * @param BillingAddresses $billing
      * @param Leads $lead
+     * @param array $details
      * @return void
      */
-    public function __construct(ShippingAddresses $shipping, BillingAddresses $billing, Leads $lead)
+    public function __construct(ShippingAddresses $shipping, BillingAddresses $billing, Leads $lead, array $details)
     {
         $this->shipping = $shipping;
         $this->billing = $billing;
         $this->lead = $lead;
+        $this->details = $details;
     }
 
     /**
@@ -56,5 +58,10 @@ class ShopifyCustomerUpdated extends ShouldBeStored
     public function getLead()
     {
         return $this->lead;
+    }
+
+    public function getDetails()
+    {
+        return $this->details;
     }
 }

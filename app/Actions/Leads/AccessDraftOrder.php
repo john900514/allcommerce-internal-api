@@ -48,9 +48,11 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
                     {
                         // Set up the aggregate with the lead data.
                         $aggy = ShopifyOrderAggregate::retrieve($lead->id)
-                            ->addLeadRecord($lead)
-                            ->addShippingAddress($shipping)
-                            ->addBillingAddress($billing);
+                            //->addLeadRecord($lead)
+                            //->addShippingAddress($shipping)
+                            //->addBillingAddress($billing)
+                        ;
+
 
                         $record_customer = false;
                         $customer_attr = $lead->attributes()->whereName('shopifyCustomer')->first();
@@ -98,7 +100,15 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
                                 'customer' => $customer
                             ];
 
-                            $aggy = $aggy->addShopifyCustomerLeadAttribute($deets, $record_customer);
+                            if($record_customer)
+                            {
+                                $aggy = $aggy->addShopifyCustomerLeadAttribute($deets, $record_customer);
+                            }
+                            else
+                            {
+                                $aggy = $aggy->updateShopifyCustomerLeadAttribute($deets);
+                            }
+
 
                             // see if there is an DraftOrder lead attribute already
                             $draft_attr = $lead->attributes()
@@ -171,7 +181,6 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
                                         $draft_order = $response['draft_order'];
                                         $aggy = $aggy->updateShopifyDraftOrderAttribute($draft_order);
                                     }
-
                                 }
                             }
 

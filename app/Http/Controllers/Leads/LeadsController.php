@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Leads;
 
-use App\Actions\Leads\AccessDraftOrder;
-use App\Actions\Leads\CreateLeadByEmail;
-use App\Actions\Leads\CreateLeadByShippingAddress;
-use App\Actions\Leads\CreateOrUpdateLeadByEmail;
-use App\Actions\Leads\CreateOrUpdateLeadByShippingAddress;
-use App\Actions\Leads\UpdateLeadByBillingAddress;
-use App\Actions\Leads\UpdateLeadByEmail;
-use App\Actions\Leads\UpdateLeadByShippingAddress;
-use App\Aggregates\Orders\ShopifyOrderAggregate;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Actions\Leads\AccessDraftOrder;
+use App\Actions\Leads\CreateLeadByEmail;
+use App\Actions\Leads\UpdateLeadByEmail;
 use Illuminate\Support\Facades\Validator;
+use App\Actions\Leads\CreateOrUpdateLeadByEmail;
+use App\Actions\Leads\UpdateLeadByBillingAddress;
+use App\Actions\Leads\CreateLeadByShippingAddress;
+use App\Actions\Leads\UpdateLeadByShippingAddress;
+use App\Actions\Leads\CreateOrUpdateLeadByShippingAddress;
 
 class LeadsController extends Controller
 {
@@ -28,21 +27,19 @@ class LeadsController extends Controller
         $this->request = $request;
     }
 
-    public function createOrUpdate(CreateOrUpdateLeadByEmail $emailAction, CreateOrUpdateLeadByShippingAddress $shipAction)
+    // Leads via Email
+    public function createWithEmail(CreateLeadByEmail $action)
     {
-        $results = ['success' => false, 'reason' => 'Unsupported Reference.'];
+        $results = ['success' => false, 'reason' => 'Could not create or update lead.'];
 
         $data = $this->request->all();
 
         $validated = Validator::make($data, [
-            'attributes' => 'bail|required|array',
-            'lead_uuid'  => 'sometimes|required|exists:leads,id',
-            'attributes.reference' => 'bail|required|in:email,shipping',
-            'attributes.value' => 'bail|required',
-            'attributes.checkoutType' => 'bail|required|in:checkout_funnel',
-            'attributes.checkoutId' => 'bail|required',
-            'attributes.shopUuid' => 'bail|required|exists:shops,id',
-            'attributes.emailList' => 'sometimes|required|boolean',
+            'email' => 'bail|required',
+            'checkoutType' => 'bail|required|in:checkout_funnel',
+            'checkoutId' => 'bail|required',
+            //'shopUuid' => 'bail|required|exists:shops,id',
+            'emailList' => 'sometimes|required|boolean',
         ]);
 
         if($validated->fails())
@@ -55,20 +52,12 @@ class LeadsController extends Controller
         }
         else
         {
-            $data_attrbutes = $data['attributes'];
-            // Eval for the reference
-            switch($data_attrbutes['reference'])
+            $data['ip'] = $this->request->ip();
+            if($lead = $action->execute($data))
             {
-                case 'email':
-                    $results = $emailAction->execute($data);
-                    break;
-
-                case 'shipping':
-                    $results = $shipAction->execute($data);
-                    break;
+                $results = ['success' => true, 'lead_uuid' => $lead['id']];
             }
         }
-
 
         return response()->json($results);
     }
@@ -104,40 +93,7 @@ class LeadsController extends Controller
         return response()->json($results);
     }
 
-    public function createWithEmail(CreateLeadByEmail $action)
-    {
-        $results = ['success' => false, 'reason' => 'Could not create or update lead.'];
-
-        $data = $this->request->all();
-
-        $validated = Validator::make($data, [
-            'email' => 'bail|required',
-            'checkoutType' => 'bail|required|in:checkout_funnel',
-            'checkoutId' => 'bail|required',
-            //'shopUuid' => 'bail|required|exists:shops,id',
-            'emailList' => 'sometimes|required|boolean',
-        ]);
-
-        if($validated->fails())
-        {
-            foreach($validated->errors()->toArray() as $col => $msg)
-            {
-                $results['reason'] = $msg[0];
-                break;
-            }
-        }
-        else
-        {
-            $data['ip'] = $this->request->ip();
-            if($lead = $action->execute($data))
-            {
-                $results = ['success' => true, 'lead_uuid' => $lead['id']];
-            }
-        }
-
-        return response()->json($results);
-    }
-
+    // Leads Via Shipping
     public function createWithShipping(CreateLeadByShippingAddress $action)
     {
         $results = ['success' => false, 'reason' => 'Could not create lead.'];
@@ -241,6 +197,7 @@ class LeadsController extends Controller
         return response()->json($results);
     }
 
+    // Leads-2-Shopify Draft Orders
     public function draftOrderWithShippingMethod(AccessDraftOrder $action)
     {
         $results = ['success' => false, 'reason' => 'Could not access draft order with the data given.'];

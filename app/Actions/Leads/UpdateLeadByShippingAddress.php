@@ -55,12 +55,12 @@ class UpdateLeadByShippingAddress extends CreateOrUpdateLeadBaseAction
                     $lead->save();
 
                     $aggy = ShopifyOrderAggregate::retrieve($lead->id)
-                        ->addLeadRecord($lead);
+                        ->updateLeadRecord($lead);
                 }
                 else
                 {
                     $aggy = ShopifyOrderAggregate::retrieve($lead->id)
-                        ->addLeadRecord($lead, false);
+                        ;//->addLeadRecord($lead, false);
                 }
 
                 // Use the lead aggregate to update the optin
@@ -75,7 +75,7 @@ class UpdateLeadByShippingAddress extends CreateOrUpdateLeadBaseAction
 
                     if(!is_null($shipping))
                     {
-                        $aggy = $aggy->addShippingAddress($shipping, false)
+                        $aggy = $aggy//->addShippingAddress($shipping, false)
                             ->updateShippingAddress($payload['shipping']);
                     }
                     else
@@ -115,7 +115,7 @@ class UpdateLeadByShippingAddress extends CreateOrUpdateLeadBaseAction
 
                     if(!is_null($billing))
                     {
-                        $aggy = $aggy->addBillingAddress($billing, false)
+                        $aggy = $aggy//->addBillingAddress($billing, false)
                             ->updateBillingAddress($payload['billing']);
                     }
                     else
@@ -156,17 +156,6 @@ class UpdateLeadByShippingAddress extends CreateOrUpdateLeadBaseAction
                         ->linkEmailToShipping($lead->email)
                         ->linkEmailToBilling($lead->email)
                     ;
-                }
-
-                if(!is_null($shipping))
-                {
-                    // @todo - check if there's a draft order then update
-                    $yes = false;
-                    if($yes)
-                    {
-                        $aggy = $aggy->updateShopifyDraftOrder();
-                        //$aggy = $aggy->createShopifyDraftOrder();
-                    }
                 }
 
                 // Let's go ahead and make it all happen then we'll go about our business

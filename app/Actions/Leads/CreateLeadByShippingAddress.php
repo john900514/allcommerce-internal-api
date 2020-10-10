@@ -60,6 +60,7 @@ class CreateLeadByShippingAddress extends CreateOrUpdateLeadBaseAction
                     $payload['shipping']['client_uuid'] = $lead->client_uuid;
                     $payload['shipping']['merchant_uuid'] = $lead->merchant_uuid;
                     $payload['shipping']['shop_uuid'] = $lead->shop_uuid;
+
                     // add the Shipping Address
                     $shipping = new $this->shipping($payload['shipping']);
                     $shipping->save();

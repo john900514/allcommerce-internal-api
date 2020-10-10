@@ -30,36 +30,33 @@ class UpdateLeadByEmail extends CreateOrUpdateLeadBaseAction
 
             if(!is_null($lead))
             {
-                $lead->email = $payload['email'];
+                $aggy = ShopifyOrderAggregate::retrieve($lead->id)
+                    ->addEmailAddress($payload['email'])
+                    ->addContactOptin($payload['emailList']);
 
-                if($lead->save())
+                $results = ['lead' => $aggy->getLead()->toArray()];
+                $results['lead']['email'] = $payload['email'];
+
+                $shipping = $lead->shipping_address()->first();
+                $billing  =  $lead->billing_address()->first();
+
+                if(!is_null($shipping))
                 {
-                    $results = ['lead' => $lead->toArray()];
+                    $results['shipping'] = $shipping->toArray();
+                    $results['shipping']['email'] = $payload['email'];
 
-                    $aggy = ShopifyOrderAggregate::retrieve($lead->id)
-                        ->addLeadRecord($lead, false)
-                        ->addEmailAddress($lead->email)
-                        ->addContactOptin($payload['emailList']);
-
-                    $shipping = $lead->shipping_address()->first();
-                    $billing  =  $lead->billing_address()->first();
-
-                    if(!is_null($shipping))
-                    {
-                        $results['shipping'] = $shipping->toArray();
-                        $aggy = $aggy->addShippingAddress($shipping, false);
-                    }
-
-                    if(!is_null($billing))
-                    {
-                        $results['billing'] = $billing->toArray();
-                        $aggy = $aggy->addBillingAddress($billing, false);
-                    }
-
-                    $aggy->linkEmailToBilling($lead->email)
-                        ->linkEmailToShipping($lead->email)
-                        ->persist();
+                    $aggy = $aggy->linkEmailToShipping($payload['email']);
                 }
+
+                if(!is_null($billing))
+                {
+                    $results['billing'] = $billing->toArray();
+                    $results['billing']['email'] = $payload['email'];
+
+                    $aggy = $aggy->linkEmailToBilling($payload['email']);
+                }
+
+                $aggy->persist();
             }
         }
 

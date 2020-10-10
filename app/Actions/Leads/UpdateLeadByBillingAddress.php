@@ -28,7 +28,7 @@ class UpdateLeadByBillingAddress extends CreateOrUpdateLeadBaseAction
             if(!is_null($lead))
             {
                 $aggy = ShopifyOrderAggregate::retrieve($lead->id)
-                    ->addLeadRecord($lead)
+                    //->addLeadRecord($lead)
                     ->addContactOptin($payload['emailList']);
 
                 $billing = null;
@@ -39,7 +39,7 @@ class UpdateLeadByBillingAddress extends CreateOrUpdateLeadBaseAction
 
                     if(!is_null($billing))
                     {
-                        $aggy = $aggy->addBillingAddress($billing, false)
+                        $aggy = $aggy//->addBillingAddress($billing, false)
                             ->updateBillingAddress($payload['billing']);
                     }
                     else
@@ -76,18 +76,9 @@ class UpdateLeadByBillingAddress extends CreateOrUpdateLeadBaseAction
                 // link the email everywhere if its available!
                 if(!is_null($lead->email))
                 {
-                    $aggy = $aggy->addEmailAddress($lead->email)
+                    $aggy = $aggy//->addEmailAddress($lead->email)
                         ->linkEmailToBilling($lead->email)
                     ;
-                }
-
-                if(!is_null($billing))
-                {
-                    $yes = true;
-                    if($yes)
-                    {
-                        $aggy = $aggy->updateShopifyDraftOrder();
-                    }
                 }
 
                 // Let's go ahead and make it all happen then we'll go about our business

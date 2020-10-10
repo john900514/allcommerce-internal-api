@@ -60,6 +60,7 @@ class LeadsProjector extends Projector implements ShouldQueue
     public function onEmailCreated(EmailCreated $event)
     {
         $lead = $event->getLead();
+        $lead->email = $event->getEmail();
         $email = new Emails();
         $email->email = $event->getEmail();
         $email->shop_uuid = $lead->shop_uuid;
@@ -67,13 +68,19 @@ class LeadsProjector extends Projector implements ShouldQueue
         $email->client_uuid = $lead->client_uuid;
 
         $email->save();
+        $lead->save();
     }
 
     public function onEmailUpdated(EmailUpdated $event)
     {
-        $model = $event->getEmailModel();
-        $model->email = $event->getEmailAddress();
+        $model = $event->getEmails();
+        $model->email = $event->getEmail();
         $model->save();
+
+        $lead = $event->getLead();
+        // Update the lead itself;
+        $lead->email = $event->getEmail();
+        $lead->save();
     }
 
     public function onShippingUpdated(ShippingUpdated $event)
