@@ -126,7 +126,6 @@ class AuthorizeCreditCardPayment implements Action
                                                 $auth_response = ['success' => false, 'reason' => 'Error - '.$e->getMessage().' You were not charged.'];
                                             }
 
-
                                             if($auth_response['success'])
                                             {
                                                 // On success, cut a transactions record
@@ -147,6 +146,7 @@ class AuthorizeCreditCardPayment implements Action
                                                     'misc' => [
                                                         'charge_type' => 'auth',
                                                         'platform' => 'Shopify',
+                                                        'enabled_gateway' => $gateway->toArray(),
                                                         'details' => $auth_response['authorization']
                                                     ]
                                                 ];
@@ -156,7 +156,6 @@ class AuthorizeCreditCardPayment implements Action
                                                 if($transaction)
                                                 {
                                                     $results = ['success' => true, 'transaction' => $transaction->id];
-
 
                                                     // Give $aggy the good new and she'll fire the jobs that handle the rest so the customer doesn't have to wait!
                                                     $aggy->processPostAuth($transaction)
