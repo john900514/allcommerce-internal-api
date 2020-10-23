@@ -16,6 +16,7 @@ use App\Events\Leads\LeadUpdated;
 use App\Events\Leads\LineItemsAdded;
 use App\Events\Orders\LeadConvertedToOrder;
 use App\Events\Orders\OrderPaymentAuthorized;
+use App\Events\Orders\ShopifyOrderCreated;
 use App\Events\Shopify\ShopifyCustomerCreated;
 use App\Events\Shopify\ShopifyCustomerUpdated;
 use App\Events\Shopify\ShopifyDraftOrderCreated;
@@ -151,6 +152,11 @@ class ShopifyOrderAggregate extends AggregateRoot
     {
         $this->payment_authorized = true;
         $this->transaction_record = $event->getTransaction();
+    }
+
+    public function applyShopifyOrderCreated($event)
+    {
+        $this->shopify_order = $event->getOrder();
     }
 
     public function apply() {}
@@ -415,6 +421,13 @@ class ShopifyOrderAggregate extends AggregateRoot
     public function processPostAuth(Transactions $transaction)
     {
         $this->recordThat(new OrderPaymentAuthorized($transaction));
+
+        return $this;
+    }
+
+    public function setShopifyOrder(array $order)
+    {
+        $this->recordThat(new ShopifyOrderCreated($order));
 
         return $this;
     }

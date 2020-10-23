@@ -64,9 +64,14 @@ class Orders extends Model
         return $results;
     }
 
+    public function lead()
+    {
+        return $this->hasOne('App\Leads', 'order_uuid', 'id');
+    }
+
     public function attributes()
     {
-        return $this->hasMany('App\Models\OrderAttributes', 'order_uuid', 'id');
+        return $this->hasMany('App\Models\Sales\OrderAttributes', 'order_uuid', 'id');
     }
 
     public function shop()

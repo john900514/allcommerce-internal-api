@@ -77,4 +77,15 @@ class ShopifyDraftOrderService extends ShopifyAdminAPIService
 
         return $this->put($api_url, $payload, $headers);
     }
+
+    public function completeDraftOrder(ShopifyInstalls $install, $draft_order_id)
+    {
+        $headers = [
+            'X-Shopify-Access-Token: '.$install->access_token
+        ];
+
+        $api_url = 'https://'.$install->shopify_store_url.'/admin/api/2020-10/draft_orders/'.$draft_order_id.'/complete.json?payment_pending=true';
+
+        return $this->put($api_url, [], $headers);
+    }
 }
