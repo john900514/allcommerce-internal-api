@@ -72,8 +72,17 @@ Route::group(['middleware'=> ['faux-auth']], function() {
 
             Route::post('/draftOrder/shippingMethod', 'Leads\LeadsController@draftOrderWithShippingMethod');
         });
-    });
 
+        Route::group(['prefix'=> 'orders'], function() {
+            Route::post('/', 'Orders\OrdersController@createWithLead');
+
+            Route::group(['prefix'=> 'payments'], function() {
+                Route::group(['prefix'=> 'credit'], function() {
+                    Route::post('/authorize', 'Payments\Credit\CreditCardPaymentController@authorize_card');
+                });
+            });
+        });
+    });
 
     Route::group(['prefix'=> 'oauth'], function() {
         Route::put('/token', 'Auth\FauxAuthenticationController@update');

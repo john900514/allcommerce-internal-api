@@ -13,6 +13,7 @@ use App\Events\Leads\EmailToAddressLinkBecameAvailable;
 use App\Events\Leads\LeadCreated;
 use App\Events\Leads\EmailCreated;
 use App\Events\Leads\EmailUpdated;
+use App\Events\Orders\LeadConvertedToOrder;
 use App\Jobs\Leads\LinkEmailToBillShip;
 use App\Events\Shopify\ShopifyCustomerUpdated;
 use App\Events\Shopify\ShopifyCustomerCreated;
@@ -237,5 +238,20 @@ class LeadsProjector extends Projector implements ShouldQueue
                 $billing->save();
             }
         }
+    }
+
+    public function onLeadConvertedToOrder(LeadConvertedToOrder $event)
+    {
+        $lead = $event->getLead();
+        $lead->order_uuid = $event->getOrder()->id;
+        $lead->save();
+
+        $shipping = $lead->shipping_address()->first();
+        $shipping->order_uuid = $event->getOrder()->id;
+        $shipping->save();
+
+        $billing = $lead->billing_address()->first();
+        $billing->order_uuid = $event->getOrder()->id;
+        $billing->save();
     }
 }

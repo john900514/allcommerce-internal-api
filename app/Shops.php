@@ -48,4 +48,16 @@ class Shops extends Model
     {
         return $this->hasOne('App\MerchantApiTokens', 'scopes->shop_id', 'id');
     }
+
+    public function shop_assigned_payment_providers()
+    {
+        return $this->hasMany('App\Models\PaymentGateways\ShopAssignedPaymentProviders', 'shop_uuid', 'id')
+            ->with('payment_provider');
+    }
+
+    public function client_enabled_payment_providers()
+    {
+        return $this->hasMany('App\Models\PaymentGateways\ClientEnabledPaymentProviders', 'client_id', 'client_id')
+            ->with('payment_provider');
+    }
 }

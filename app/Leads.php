@@ -141,4 +141,44 @@ class Leads extends Model
 
         });
     }
+
+    public function isReadyToBeConvertedToOrder()
+    {
+        $results = false;
+
+        // Validate Shipping and Billing UUID existence
+        if((!is_null($this->shipping_uuid)) && (!is_null($this->billing_uuid)))
+        {
+            // Reference (assumed checkout funnel for now)
+            if((!is_null($this->reference_type)) && (!is_null($this->reference_uuid)))
+            {
+                $shop_type = false;
+                switch($this->reference_type)
+                {
+                    case 'checkout_funnel':
+                        $reference = CheckoutFunnels::find($this->reference_uuid);
+                        if(!is_null($reference))
+                        {
+                            $shop_type = $reference->shop_platform;
+                        }
+                        break;
+                }
+
+                // Shop's ShopType (assumed to be shopify for now)
+                switch($shop_type)
+                {
+                    // If shopify, emailList, shopifyCustomer, shopifyDraftOrder
+                    case 'shopify':
+                        $emailList = $this->attributes()->whereName('emailList')->first();
+                        $shopifyCustomer = $this->attributes()->whereName('shopifyCustomer')->first();
+                        $shopifyDraftOrder = $this->attributes()->whereName('shopifyDraftOrder')->first();
+
+                        $results = (!is_null($emailList)) && (!is_null($shopifyCustomer)) && (!is_null($shopifyDraftOrder));
+                        break;
+                }
+            }
+        }
+
+        return $results;
+    }
 }

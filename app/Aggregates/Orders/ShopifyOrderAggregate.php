@@ -14,12 +14,16 @@ use App\Events\Leads\EmailUpdated;
 use App\Events\Leads\LeadCreated;
 use App\Events\Leads\LeadUpdated;
 use App\Events\Leads\LineItemsAdded;
+use App\Events\Orders\LeadConvertedToOrder;
+use App\Events\Orders\OrderPaymentAuthorized;
 use App\Events\Shopify\ShopifyCustomerCreated;
 use App\Events\Shopify\ShopifyCustomerUpdated;
 use App\Events\Shopify\ShopifyDraftOrderCreated;
 use App\Events\Shopify\ShopifyDraftOrderUpdated;
 use App\LeadAttributes;
 use App\Leads;
+use App\Models\Sales\Orders;
+use App\Models\Sales\Transactions;
 use App\ShippingAddresses;
 use Illuminate\Support\Facades\Validator;
 use Spatie\EventSourcing\AggregateRoots\AggregateRoot;
@@ -29,12 +33,16 @@ class ShopifyOrderAggregate extends AggregateRoot
     protected static bool $allowConcurrency = true;
 
     private $line_items = [];
-    private $lead_record;
+    private $lead_record, $order_record, $transaction_record;
     private $email_address, $contact_optin;
     private $lead_attributes = [];
     private $shipping_address;
     private $billing_address;
     private $shopify_customer, $shopify_draft_order, $shopify_order;
+    private $payment_authorized = false;
+    private $payment_captured = false;
+    private $order_closed = false;
+
 
     // APPLY functions for state
     public function applyLeadCreated(LeadCreated $event)
@@ -132,6 +140,17 @@ class ShopifyOrderAggregate extends AggregateRoot
     public function applyShopifyDraftOrderUpdated(ShopifyDraftOrderUpdated $event)
     {
         $this->shopify_draft_order = $event->getCheckoutDetails();
+    }
+
+    public function applyLeadConvertedToOrder(LeadConvertedToOrder $event)
+    {
+        $this->order_record = $event->getOrder();
+    }
+
+    public function applyOrderPaymentAuthorized(OrderPaymentAuthorized $event)
+    {
+        $this->payment_authorized = true;
+        $this->transaction_record = $event->getTransaction();
     }
 
     public function apply() {}
@@ -386,8 +405,78 @@ class ShopifyOrderAggregate extends AggregateRoot
         }
     }
 
+    public function leadIsNowOrder(Orders $order)
+    {
+        $this->recordThat(new LeadConvertedToOrder($order, $this->lead_record));
+
+        return $this;
+    }
+
+    public function processPostAuth(Transactions $transaction)
+    {
+        $this->recordThat(new OrderPaymentAuthorized($transaction));
+
+        return $this;
+    }
+
     public function getLead()
     {
         return $this->lead_record;
+    }
+
+    public function getOrder()
+    {
+        return $this->order_record;
+    }
+
+    public function getLineItems()
+    {
+        return $this->line_items;
+    }
+
+    public function getShopifyCustomer()
+    {
+        return $this->shopify_customer;
+    }
+
+    public function getShopifyDraftOrder()
+    {
+        return $this->shopify_draft_order;
+    }
+
+    public function getSubTotal()
+    {
+        $results = false;
+
+        if(!is_null($this->shopify_draft_order))
+        {
+            $results = floatval($this->shopify_draft_order['subtotal_price']);
+        }
+
+        return $results;
+    }
+
+    public function getTax()
+    {
+        $results = false;
+
+        if(!is_null($this->shopify_draft_order))
+        {
+            $results = floatval($this->shopify_draft_order['total_tax']);
+        }
+
+        return $results;
+    }
+
+    public function getShippingPrice()
+    {
+        $results = false;
+
+        if(!is_null($this->shopify_draft_order))
+        {
+            $results = floatval($this->shopify_draft_order['shipping_line']['price']);
+        }
+
+        return $results;
     }
 }

@@ -36,6 +36,7 @@ class CreateShopifyDraftOrder implements ShouldQueue
      * Execute the job.
      * @param ShopifyAdminAPIService $service
      * @param LeadAttributes $attributes
+     * @param InventoryVariants $variants
      * @return void
      */
     public function handle(ShopifyAdminAPIService $service, LeadAttributes $attributes, InventoryVariants $variants)
