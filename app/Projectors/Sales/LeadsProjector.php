@@ -153,7 +153,7 @@ class LeadsProjector extends Projector implements ShouldQueue
         }
 
 
-        //CreateShopifyCustomer::dispatch($event->getShipping(), $event->getBilling(), $event->getLead())->onQueue("aco-".env('APP_URL')."-shopify");
+        //CreateShopifyCustomer::dispatch($event->getShipping(), $event->getBilling(), $event->getLead())->onQueue("aco-".env('APP_ENV')."-shopify");
 
         /*
         if(!is_null($event->getLead()->email))
@@ -165,7 +165,7 @@ class LeadsProjector extends Projector implements ShouldQueue
 
     public function onShopifyCustomerUpdated(ShopifyCustomerUpdated $event)
     {
-        UpdateShopifyCustomer::dispatch($event->getShipping(), $event->getBilling(), $event->getLead())->onQueue("aco-".env('APP_URL')."-shopify");
+        UpdateShopifyCustomer::dispatch($event->getShipping(), $event->getBilling(), $event->getLead())->onQueue("aco-".env('APP_ENV')."-shopify");
 
         if(!is_null($event->getLead()->email))
         {
