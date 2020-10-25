@@ -2,8 +2,6 @@
 
 namespace App\Events\Orders;
 
-use App\Leads;
-use App\Models\Sales\Orders;
 use App\Models\Sales\Transactions;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
@@ -14,20 +12,20 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class ShopifyOrderCreated extends ShouldBeStored
+class OrderPaymentCaptured extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $order;
+    protected $transaction;
 
     /**
      * Create a new event instance.
-     * @param array $order
+     * @param Transactions $transaction
      * @return void
      */
-    public function __construct(array $order)
+    public function __construct(Transactions $transaction)
     {
-        $this->order = $order;
+        $this->transaction = $transaction;
     }
 
     /**
@@ -40,8 +38,8 @@ class ShopifyOrderCreated extends ShouldBeStored
         return new PrivateChannel('channel-name');
     }
 
-    public function getOrder()
+    public function getTransaction()
     {
-        return $this->order;
+        return $this->transaction;
     }
 }

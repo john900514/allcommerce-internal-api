@@ -16,11 +16,13 @@ use App\Events\Leads\LeadUpdated;
 use App\Events\Leads\LineItemsAdded;
 use App\Events\Orders\LeadConvertedToOrder;
 use App\Events\Orders\OrderPaymentAuthorized;
+use App\Events\Orders\OrderPaymentCaptured;
 use App\Events\Orders\ShopifyOrderCreated;
 use App\Events\Shopify\ShopifyCustomerCreated;
 use App\Events\Shopify\ShopifyCustomerUpdated;
 use App\Events\Shopify\ShopifyDraftOrderCreated;
 use App\Events\Shopify\ShopifyDraftOrderUpdated;
+use App\Events\Shopify\ShopifyOrderCompleted;
 use App\LeadAttributes;
 use App\Leads;
 use App\Models\Sales\Orders;
@@ -34,7 +36,8 @@ class ShopifyOrderAggregate extends AggregateRoot
     protected static bool $allowConcurrency = true;
 
     private $line_items = [];
-    private $lead_record, $order_record, $transaction_record;
+    private $lead_record, $order_record;
+    private $transaction_records = [];
     private $email_address, $contact_optin;
     private $lead_attributes = [];
     private $shipping_address;
@@ -151,51 +154,67 @@ class ShopifyOrderAggregate extends AggregateRoot
     public function applyOrderPaymentAuthorized(OrderPaymentAuthorized $event)
     {
         $this->payment_authorized = true;
-        $this->transaction_record = $event->getTransaction();
+        $this->transaction_records[] = $event->getTransaction();
     }
 
-    public function applyShopifyOrderCreated($event)
+    public function applyShopifyOrderCreated(ShopifyOrderCreated $event)
     {
         $this->shopify_order = $event->getOrder();
     }
 
-    public function apply() {}
+    public function applyOrderPaymentCaptured(OrderPaymentCaptured $event)
+    {
+        $this->payment_captured = true;
+        $this->transaction_records[] = $event->getTransaction();
+    }
+
+    public function applyShopifyOrderCompleted(ShopifyOrderCompleted $event)
+    {
+        $this->order_closed = true;
+    }
 
     // ACTION functions for state change
     public function addLeadRecord(Leads $lead, $record = true)
     {
-        $this->recordThat(new LeadCreated($lead));
+        if(!$this->order_closed) {
+            $this->recordThat(new LeadCreated($lead));
+        }
+
 
         return $this;
     }
 
     public function addLineItems(array $products)
     {
-        $this->recordThat(new LineItemsAdded($this->lead_record, $products));
+        if(!$this->order_closed) {
+            $this->recordThat(new LineItemsAdded($this->lead_record, $products));
+        }
 
         return $this;
     }
 
     public function addEmailAddress($email)
     {
-        if(!is_null($this->lead_record))
-        {
-            $email_record = $this->lead_record->email_record()
-                ->whereShopUuid($this->lead_record->shop_uuid)
-                ->first();
+        if(!$this->order_closed) {
+            if(!is_null($this->lead_record))
+            {
+                $email_record = $this->lead_record->email_record()
+                    ->whereShopUuid($this->lead_record->shop_uuid)
+                    ->first();
 
-            if(is_null($email_record))
-            {
-                $this->recordThat(new EmailCreated($email, $this->lead_record));
-            }
-            elseif($email_record->email != $email)
-            {
-                if($email_record->shop_uuid == $this->lead_record->shop_uuid)
+                if(is_null($email_record))
                 {
-                    $this->recordThat(new EmailUpdated($email, $email_record, $this->lead_record));
+                    $this->recordThat(new EmailCreated($email, $this->lead_record));
                 }
-            }
+                elseif($email_record->email != $email)
+                {
+                    if($email_record->shop_uuid == $this->lead_record->shop_uuid)
+                    {
+                        $this->recordThat(new EmailUpdated($email, $email_record, $this->lead_record));
+                    }
+                }
 
+            }
         }
 
         return $this;
@@ -203,21 +222,24 @@ class ShopifyOrderAggregate extends AggregateRoot
 
     public function addContactOptin(bool $optin) : self
     {
-        $email_attr = $this->lead_record->attributes()
-            ->whereName('emailList')
-            ->whereActive(1)
-            ->first();
-
-        if(!is_null($email_attr))
+        if(!$this->order_closed)
         {
-            if($email_attr->value != $optin)
+            $email_attr = $this->lead_record->attributes()
+                ->whereName('emailList')
+                ->whereActive(1)
+                ->first();
+
+            if(!is_null($email_attr))
+            {
+                if($email_attr->value != $optin)
+                {
+                    $this->recordThat(new CustomerOptedIntoCommunication($this->lead_record, $optin));
+                }
+            }
+            else
             {
                 $this->recordThat(new CustomerOptedIntoCommunication($this->lead_record, $optin));
             }
-        }
-        else
-        {
-            $this->recordThat(new CustomerOptedIntoCommunication($this->lead_record, $optin));
         }
 
         return $this;
@@ -225,44 +247,56 @@ class ShopifyOrderAggregate extends AggregateRoot
 
     public function addShippingAddress(ShippingAddresses $shipping, $record = true)
     {
-        $this->recordThat(new ShippingCreated($shipping, $this->lead_record));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new ShippingCreated($shipping, $this->lead_record));
+        }
 
         return $this;
     }
 
     public function addBillingAddress(BillingAddresses $billing, $record = true)
     {
-        $this->recordThat(new BillingCreated($billing, $this->lead_record));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new BillingCreated($billing, $this->lead_record));
+        }
 
         return $this;
     }
 
     public function updateLeadRecord(Leads $lead)
     {
-        $this->recordThat(new LeadUpdated($lead));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new LeadUpdated($lead));
+        }
 
         return $this;
     }
 
     public function updateShippingAddress(array $shipping)
     {
-        // There's a shipping address or skip.
-        if((!is_null($this->shipping_address)) && (count($shipping) > 0))
+        if(!$this->order_closed)
         {
-            // Check all applicable fields, skip all non-changes,
-            $something_changed = false;
-            foreach ($shipping as $col => $val)
+            // There's a shipping address or skip.
+            if((!is_null($this->shipping_address)) && (count($shipping) > 0))
             {
-                if($this->shipping_address->$col != $val)
+                // Check all applicable fields, skip all non-changes,
+                $something_changed = false;
+                foreach ($shipping as $col => $val)
                 {
-                    $this->shipping_address->$col = $val;
-                    $something_changed = true;
+                    if($this->shipping_address->$col != $val)
+                    {
+                        $this->shipping_address->$col = $val;
+                        $something_changed = true;
+                    }
                 }
-            }
 
-            if($something_changed)
-            {
-                $this->recordThat(new ShippingUpdated($this->shipping_address->id, $shipping));
+                if($something_changed)
+                {
+                    $this->recordThat(new ShippingUpdated($this->shipping_address->id, $shipping));
+                }
             }
         }
 
@@ -271,23 +305,26 @@ class ShopifyOrderAggregate extends AggregateRoot
 
     public function updateBillingAddress(array $billing)
     {
-        // There's a billing address or skip.
-        if((!is_null($this->billing_address)) && (count($billing) > 0))
+        if(!$this->order_closed)
         {
-            // Check all applicable fields, skip all non-changes,
-            $something_changed = false;
-            foreach ($billing as $col => $val)
+            // There's a billing address or skip.
+            if((!is_null($this->billing_address)) && (count($billing) > 0))
             {
-                if($this->billing_address->$col != $val)
+                // Check all applicable fields, skip all non-changes,
+                $something_changed = false;
+                foreach ($billing as $col => $val)
                 {
-                    $this->billing_address->$col = $val;
-                    $something_changed = true;
+                    if($this->billing_address->$col != $val)
+                    {
+                        $this->billing_address->$col = $val;
+                        $something_changed = true;
+                    }
                 }
-            }
 
-            if($something_changed)
-            {
-                $this->recordThat(new BillingUpdated($this->billing_address->id, $billing));
+                if($something_changed)
+                {
+                    $this->recordThat(new BillingUpdated($this->billing_address->id, $billing));
+                }
             }
         }
 
@@ -296,25 +333,30 @@ class ShopifyOrderAggregate extends AggregateRoot
 
     public function linkEmailToShipping($email) : self
     {
-        if((!is_null($this->shipping_address)))
+        if(!$this->order_closed)
         {
-            if($this->shipping_address->email != $email)
+            if((!is_null($this->shipping_address)))
             {
-                $this->recordThat(new EmailToAddressLinkBecameAvailable($email, $this->shipping_address, $this->billing_address));
+                if($this->shipping_address->email != $email)
+                {
+                    $this->recordThat(new EmailToAddressLinkBecameAvailable($email, $this->shipping_address, $this->billing_address));
+                }
             }
         }
-
 
         return $this;
     }
 
     public function linkEmailToBilling($email) : self
     {
-        if((!is_null($this->billing_address)))
+        if(!$this->order_closed)
         {
-            if($this->billing_address->email != $email)
+            if((!is_null($this->billing_address)))
             {
-                $this->recordThat(new EmailToAddressLinkBecameAvailable($email, $this->shipping_address, $this->billing_address));
+                if($this->billing_address->email != $email)
+                {
+                    $this->recordThat(new EmailToAddressLinkBecameAvailable($email, $this->shipping_address, $this->billing_address));
+                }
             }
         }
 
@@ -323,16 +365,22 @@ class ShopifyOrderAggregate extends AggregateRoot
 
     public function addShopifyCustomerLeadAttribute($details, $record = true) : self
     {
-        $this->recordThat(new ShopifyCustomerCreated($details, $this->lead_record));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new ShopifyCustomerCreated($details, $this->lead_record));
+        }
 
         return $this;
     }
 
     public function addShopifyDraftOrderAttribute($details, $record = true) : self
     {
-        if($record) {
-            // create a new event. stash, $lead_uuid, payload array (hopefully it serializes lol).
-            $this->recordThat(new ShopifyDraftOrderCreated($this->lead_record, $details));
+        if(!$this->order_closed)
+        {
+            if($record) {
+                // create a new event. stash, $lead_uuid, payload array (hopefully it serializes lol).
+                $this->recordThat(new ShopifyDraftOrderCreated($this->lead_record, $details));
+            }
         }
 
         return $this;
@@ -340,60 +388,69 @@ class ShopifyOrderAggregate extends AggregateRoot
 
     public function  updateShopifyDraftOrderAttribute($details, $record = true) : self
     {
-        $this->recordThat(new ShopifyDraftOrderUpdated($this->lead_record, $details));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new ShopifyDraftOrderUpdated($this->lead_record, $details));
+        }
 
         return $this;
     }
 
     public function updateShopifyCustomerLeadAttribute($details)
     {
-        $this->recordThat(new ShopifyCustomerUpdated($this->shipping_address, $this->billing_address, $this->lead_record, $details));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new ShopifyCustomerUpdated($this->shipping_address, $this->billing_address, $this->lead_record, $details));
+        }
 
         return $this;
     }
 
     public function createOrUpdateDraftOrder()
     {
-        $req_map = [
-            'line_items' => $this->line_items,
-            'lead_record' => $this->lead_record,
-            'email_address' => $this->email_address,
-            'billing_address' => $this->billing_address,
-            'shipping_address' => $this->shipping_address,
-            'shopify_customer' => (!is_null($this->shopify_customer)) ? $this->shopify_customer->toArray() : null
-        ];
-
-        $validated = Validator::make($req_map, [
-            'line_items'       => 'required|array', // not empty
-            'lead_record'      => 'required', // Is a lead model
-            'email_address'    => 'required|email:rfc,dns', // is an email address
-            'billing_address'  => 'required', // is a BillingAddresses Model
-            'shipping_address' => 'required', //is a ShippingAddresses model
-            'shopify_customer' => 'required|array', // is a lead attributes value
-        ]);
-
-        if(!($failed = $validated->fails()))
+        if(!$this->order_closed)
         {
-            // check for a DraftOrder record in lead_attributes
-            $customer_attr = $this->lead_record->attributes()
-                ->whereName('shopifyDraftOrder')
-                ->first();
-
-            $products = [
-                'products' => $req_map['line_items'],
-                'customer' => $req_map['shopify_customer']
+            $req_map = [
+                'line_items' => $this->line_items,
+                'lead_record' => $this->lead_record,
+                'email_address' => $this->email_address,
+                'billing_address' => $this->billing_address,
+                'shipping_address' => $this->shipping_address,
+                'shopify_customer' => (!is_null($this->shopify_customer)) ? $this->shopify_customer->toArray() : null
             ];
 
-            if(is_null($customer_attr))
+            $validated = Validator::make($req_map, [
+                'line_items'       => 'required|array', // not empty
+                'lead_record'      => 'required', // Is a lead model
+                'email_address'    => 'required|email:rfc,dns', // is an email address
+                'billing_address'  => 'required', // is a BillingAddresses Model
+                'shipping_address' => 'required', //is a ShippingAddresses model
+                'shopify_customer' => 'required|array', // is a lead attributes value
+            ]);
+
+            if(!($failed = $validated->fails()))
             {
-                // if not exists, trigger ShopifyDraftOrderCreated
-                $this->recordThat(new ShopifyDraftOrderCreated($this->lead_record, $products));
-                $this->persist();
-            }
-            else
-            {
-                $this->recordThat(new ShopifyDraftOrderUpdated($this->lead_record, $products));
-                $this->persist();
+                // check for a DraftOrder record in lead_attributes
+                $customer_attr = $this->lead_record->attributes()
+                    ->whereName('shopifyDraftOrder')
+                    ->first();
+
+                $products = [
+                    'products' => $req_map['line_items'],
+                    'customer' => $req_map['shopify_customer']
+                ];
+
+                if(is_null($customer_attr))
+                {
+                    // if not exists, trigger ShopifyDraftOrderCreated
+                    $this->recordThat(new ShopifyDraftOrderCreated($this->lead_record, $products));
+                    $this->persist();
+                }
+                else
+                {
+                    $this->recordThat(new ShopifyDraftOrderUpdated($this->lead_record, $products));
+                    $this->persist();
+                }
             }
         }
 
@@ -402,34 +459,72 @@ class ShopifyOrderAggregate extends AggregateRoot
 
     public function addToLeadAttributes(array $payload = [])
     {
-        $this->lead_attributes = $this->lead_record->attributes()->get();
-        $this->lead_attributes = $this->lead_attributes->toArray();
-
-        if((!is_null($this->lead_record)) && (count($payload) > 0))
+        if(!$this->order_closed)
         {
+            $this->lead_attributes = $this->lead_record->attributes()->get();
+            $this->lead_attributes = $this->lead_attributes->toArray();
 
+            if((!is_null($this->lead_record)) && (count($payload) > 0))
+            {
+
+            }
         }
     }
 
     public function leadIsNowOrder(Orders $order)
     {
-        $this->recordThat(new LeadConvertedToOrder($order, $this->lead_record));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new LeadConvertedToOrder($order, $this->lead_record));
+        }
 
         return $this;
     }
 
     public function processPostAuth(Transactions $transaction)
     {
-        $this->recordThat(new OrderPaymentAuthorized($transaction));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new OrderPaymentAuthorized($transaction));
+        }
+
+        return $this;
+    }
+
+    public function processPostCapture(Transactions $transaction)
+    {
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new OrderPaymentCaptured($transaction));
+        }
 
         return $this;
     }
 
     public function setShopifyOrder(array $order)
     {
-        $this->recordThat(new ShopifyOrderCreated($order));
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new ShopifyOrderCreated($order));
+        }
 
         return $this;
+    }
+
+    public function setOrderComplete(
+        array $shopify_capture_transaction
+    )
+    {
+        $results = false;
+
+        if(!$this->order_closed)
+        {
+            $this->recordThat(new ShopifyOrderCompleted($this->getOrder(), $shopify_capture_transaction));
+            $this->persist();
+            $results = true;
+        }
+
+        return $results;
     }
 
     public function getLead()
@@ -455,6 +550,11 @@ class ShopifyOrderAggregate extends AggregateRoot
     public function getShopifyDraftOrder()
     {
         return $this->shopify_draft_order;
+    }
+
+    public function getShopifyOrder()
+    {
+        return $this->shopify_order;
     }
 
     public function getSubTotal()

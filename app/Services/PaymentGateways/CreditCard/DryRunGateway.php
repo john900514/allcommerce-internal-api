@@ -42,8 +42,21 @@ class DryRunGateway implements CreditCardGateway
         return $results;
     }
 
-    public function capture()
+    public function capture(array $details)
     {
+        $results = ['success' => false, 'reason' => 'Declined'];
 
+        if(array_key_exists('capture_token', $details))
+        {
+            $results = ['success' => true, 'sale' => [
+                'status' => 'captured',
+                'price'  => $details['price'],
+                'date'   => date('Y-m-d h:m:s'),
+                'auth_id'=> $details['auth_id'],
+                'sale_id' => Uuid::uuid4()->toString()
+            ]];
+        }
+
+        return $results;
     }
 }

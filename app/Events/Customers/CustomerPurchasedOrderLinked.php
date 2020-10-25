@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Events\Orders;
+namespace App\Events\Customers;
 
-use App\Leads;
+use App\Emails;
+use App\Models\Customers\Customer;
 use App\Models\Sales\Orders;
-use App\Models\Sales\Transactions;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -14,19 +14,21 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class ShopifyOrderCreated extends ShouldBeStored
+class CustomerPurchasedOrderLinked extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $order;
+    protected $customer, $order;
 
     /**
      * Create a new event instance.
-     * @param array $order
+     * @param Customer $customer
+     * @param Orders $order
      * @return void
      */
-    public function __construct(array $order)
+    public function __construct(Customer $customer, Orders $order)
     {
+        $this->customer = $customer;
         $this->order = $order;
     }
 
@@ -38,6 +40,11 @@ class ShopifyOrderCreated extends ShouldBeStored
     public function broadcastOn()
     {
         return new PrivateChannel('channel-name');
+    }
+
+    public function getCustomer()
+    {
+        return $this->customer;
     }
 
     public function getOrder()

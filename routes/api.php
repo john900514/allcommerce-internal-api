@@ -79,6 +79,7 @@ Route::group(['middleware'=> ['faux-auth']], function() {
             Route::group(['prefix'=> 'payments'], function() {
                 Route::group(['prefix'=> 'credit'], function() {
                     Route::post('/authorize', 'Payments\Credit\CreditCardPaymentController@authorize_card');
+                    Route::post('/capture', 'Payments\Credit\CreditCardPaymentController@capture_card');
                 });
             });
         });

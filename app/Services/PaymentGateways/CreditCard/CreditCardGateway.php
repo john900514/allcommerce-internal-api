@@ -6,5 +6,5 @@ interface CreditCardGateway
 {
     public function authorize(array $details);
 
-    public function capture();
+    public function capture(array $details);
 }

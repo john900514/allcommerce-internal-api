@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models\Sales;
+namespace App\Models\Customers;
 
+use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Uuid;
 
-class Transactions extends Model
+class Customer extends Model
 {
     use SoftDeletes, Uuid;
 
@@ -35,19 +35,17 @@ class Transactions extends Model
 
     protected $casts = [
         'id' => 'uuid',
-        'order_uuid' => 'uuid',
-        'shop_uuid' => 'uuid',
-        'merchant_uuid' => 'uuid',
-        'client_uuid' => 'uuid',
-        'misc' => 'array',
+        'email' => 'uuid',
+        'phone' => 'uuid',
     ];
 
-    public function insert(array $schema)
+    public function insertNew(array $payload)
     {
         $results = false;
 
-        $model = new $this();
-        foreach($schema as $col => $val)
+        $model = new $this;
+
+        foreach ($payload as $col => $val)
         {
             $model->$col = $val;
         }
@@ -58,20 +56,5 @@ class Transactions extends Model
         }
 
         return $results;
-    }
-
-    public function order()
-    {
-        return $this->belongsTo('App\Models\Sales\Orders', 'order_uuid', 'id');
-    }
-
-    public function merchant()
-    {
-        return $this->belongsTo('App\Merchants', 'merchant_uuid', 'id');
-    }
-
-    public function client()
-    {
-        return $this->belongsTo('App\Clients', 'client_uuid', 'id');
     }
 }

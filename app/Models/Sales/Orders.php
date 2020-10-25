@@ -42,7 +42,7 @@ class Orders extends Model
         'shop_uuid' => 'uuid',
         'merchant_uuid' => 'uuid',
         'client_uuid' => 'uuid',
-        'misc' => 'collection',
+        'misc' => 'array',
     ];
 
     public function insertNew(array $payload)

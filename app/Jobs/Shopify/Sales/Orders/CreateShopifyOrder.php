@@ -77,10 +77,23 @@ class CreateShopifyOrder implements ShouldQueue
                 {
                     $transaction = $transactions['transactions'][0];
 
-                    $saved_order = $this->order->attributes()->whereName('transaction')->first();
-                    $trans_record = $ac_transactions->find($saved_order->value);
+                    //$saved_order = $this->order->attributes()->whereName('transaction')->first();
+                    $trans_record = $ac_transactions->whereOrderUuid($this->order->id)
+                        ->where('misc->charge_type', '=', 'auth')->first();
                     $trans_record->platform_transaction_id = $transaction['id'];
                     $trans_record->save();
+
+                    // Cut an order attribute record.
+                    $attr = new $attributes();
+                    $attr->order_uuid = $this->order->id;
+                    $attr->name = 'transaction';
+                    $attr->value = $trans_record->id;
+                    $attr->misc = $trans_record->misc;
+                    $attr->active = 1;
+                    $attr->shop_uuid = $this->order->shop_uuid;
+                    $attr->merchant_uuid = $this->order->merchant_uuid;
+                    $attr->client_uuid = $this->order->client_uuid;
+                    $attr->save();
 
                     // Cut an order attribute record.
                     $attr = new $attributes();

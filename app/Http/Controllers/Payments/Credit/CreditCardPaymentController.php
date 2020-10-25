@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Payments\Credit;
 
+use App\Actions\Payments\Credit\CaptureCreditCardPayment;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Actions\Payments\Credit\AuthorizeCreditCardPayment;
@@ -27,6 +28,13 @@ class CreditCardPaymentController extends Controller
          * 2. returning a reason mean a payment was attempted and denied
          * 3. returning tru should include a transaction uuid.
          */
+        $results = $action->execute($this->request->all());
+
+        return response($results);
+    }
+
+    public function capture_card(CaptureCreditCardPayment $action)
+    {
         $results = $action->execute($this->request->all());
 
         return response($results);

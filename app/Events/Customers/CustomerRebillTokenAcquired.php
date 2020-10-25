@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Events\Orders;
+namespace App\Events\Customers;
 
-use App\Leads;
-use App\Models\Sales\Orders;
-use App\Models\Sales\Transactions;
+use App\Models\Customers\Customer;
+use App\Models\PaymentGateways\PaymentProviders;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -14,20 +13,24 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class ShopifyOrderCreated extends ShouldBeStored
+class CustomerRebillTokenAcquired extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $order;
+    protected $customer, $gateway, $token;
 
     /**
      * Create a new event instance.
-     * @param array $order
+     * @param Customer $customer
+     * @param PaymentProviders $gateway
+     * @param array $token
      * @return void
      */
-    public function __construct(array $order)
+    public function __construct(Customer $customer, PaymentProviders $gateway, array $token)
     {
-        $this->order = $order;
+        $this->customer = $customer;
+        $this->gateway = $gateway;
+        $this->token = $token;
     }
 
     /**
@@ -40,8 +43,18 @@ class ShopifyOrderCreated extends ShouldBeStored
         return new PrivateChannel('channel-name');
     }
 
-    public function getOrder()
+    public function getCustomer()
     {
-        return $this->order;
+        return $this->customer;
+    }
+
+    public function getGateway()
+    {
+        return $this->gateway;
+    }
+
+    public function getToken()
+    {
+        return $this->token;
     }
 }

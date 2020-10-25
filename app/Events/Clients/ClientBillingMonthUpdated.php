@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Events\Orders;
+namespace App\Events\Clients;
 
+use App\BillingAddresses;
+use App\Clients;
 use App\Leads;
-use App\Models\Sales\Orders;
-use App\Models\Sales\Transactions;
+use App\ShippingAddresses;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -14,20 +15,19 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class ShopifyOrderCreated extends ShouldBeStored
+class ClientBillingMonthUpdated extends ShouldBeStored
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $order;
-
+    private $month;
     /**
      * Create a new event instance.
-     * @param array $order
+     * @param string $month
      * @return void
      */
-    public function __construct(array $order)
+    public function __construct(string $month)
     {
-        $this->order = $order;
+        $this->month = $month;
     }
 
     /**
@@ -40,8 +40,10 @@ class ShopifyOrderCreated extends ShouldBeStored
         return new PrivateChannel('channel-name');
     }
 
-    public function getOrder()
+    public function getMonth()
     {
-        return $this->order;
+        return $this->month;
     }
 }
+
+
