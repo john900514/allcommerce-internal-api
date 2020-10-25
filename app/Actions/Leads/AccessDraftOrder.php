@@ -115,6 +115,8 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
                                 ->whereName('shopifyDraftOrder')
                                 ->first();
 
+                            $draft_order = false;
+
                             if(is_null($draft_attr))
                             {
                                 // Check the reference type of the lead, should be checkout_funnel or fail(unsupported)
