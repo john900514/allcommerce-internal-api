@@ -93,7 +93,7 @@ class AccessDraftOrder extends CreateOrUpdateLeadBaseAction
 
                         }
 
-                        if(!is_null($customer))
+                        if(!is_null($customer) && ($customer != false))
                         {
                             // tag customer in event-sourced aggregate
                             $deets = [
